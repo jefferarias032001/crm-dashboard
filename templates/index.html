@@ -174,8 +174,32 @@
                 </div>
                 {% endif %}
 
-                {% if data.tiempo_respuesta_promedio_horas > 0 %}
+                {% if data.negocios_ganados > 0 %}
+                <div class="card accent-teal">
+                    <span class="card-kicker">Éxito</span>
+                    <h3>Negocios ganados</h3>
+                    <div class="metric">{{ data.negocios_ganados }}</div>
+                </div>
+                {% endif %}
+
+                {% if data.negocios_perdidos > 0 %}
                 <div class="card accent-orange">
+                    <span class="card-kicker">Riesgo</span>
+                    <h3>Negocios perdidos</h3>
+                    <div class="metric">{{ data.negocios_perdidos }}</div>
+                </div>
+                {% endif %}
+
+                {% if data.tasa_exito > 0 %}
+                <div class="card accent-gold">
+                    <span class="card-kicker">Resultado</span>
+                    <h3>Tasa de éxito</h3>
+                    <div class="metric">{{ data.tasa_exito }}%</div>
+                </div>
+                {% endif %}
+
+                {% if data.tiempo_respuesta_promedio_horas > 0 %}
+                <div class="card accent-cyan">
                     <span class="card-kicker">Servicio</span>
                     <h3>Resp. prom. solicitud</h3>
                     <div class="metric">{{ data.tiempo_respuesta_promedio_txt }}</div>
@@ -183,7 +207,7 @@
                 {% endif %}
 
                 {% if data.tiempo_cierre_promedio_dias > 0 %}
-                <div class="card accent-cyan">
+                <div class="card accent-pink">
                     <span class="card-kicker">Operación</span>
                     <h3>Cierre prom. cotización</h3>
                     <div class="metric">{{ data.tiempo_cierre_promedio_txt }}</div>
@@ -191,18 +215,10 @@
                 {% endif %}
 
                 {% if data.valor_total > 0 %}
-                <div class="card accent-gold">
+                <div class="card accent-navy">
                     <span class="card-kicker">Negocio</span>
                     <h3>Valor estimado total</h3>
                     <div class="metric">{{ data.valor_total | currency }}</div>
-                </div>
-                {% endif %}
-
-                {% if data.valor_promedio_negocio > 0 %}
-                <div class="card accent-pink">
-                    <span class="card-kicker">Ticket</span>
-                    <h3>Valor prom. negocio</h3>
-                    <div class="metric">{{ data.valor_promedio_negocio | currency }}</div>
                 </div>
                 {% endif %}
             </section>
@@ -310,38 +326,48 @@
             <section class="grid-2">
                 <div class="panel">
                     <div class="panel-header">
-                        <h2 class="chart-title chart-title-teal">Solicitudes por canal</h2>
+                        <h2 class="chart-title chart-title-teal">Valor del negocio por cliente</h2>
+                        <span class="badge">Clientes</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="clientValueChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="chart-title chart-title-purple">Solicitudes por canal</h2>
                         <span class="badge">Canales</span>
                     </div>
                     <div class="chart-box">
                         <canvas id="channelChart"></canvas>
                     </div>
                 </div>
+            </section>
 
+            <section class="grid-2">
                 <div class="panel">
                     <div class="panel-header">
-                        <h2 class="chart-title chart-title-purple">Distribución por tipo de cliente</h2>
+                        <h2 class="chart-title chart-title-cyan">Distribución por tipo de cliente</h2>
                         <span class="badge">Segmentación</span>
                     </div>
                     <div class="chart-box">
                         <canvas id="clientTypeChart"></canvas>
                     </div>
                 </div>
-            </section>
 
-            {% if data.insights %}
-            <section class="panel">
-                <div class="panel-header">
-                    <h2>Hallazgos ejecutivos</h2>
-                    <span class="badge">Insights</span>
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Hallazgos ejecutivos</h2>
+                        <span class="badge">Insights</span>
+                    </div>
+                    <ul class="insights">
+                        {% for item in data.insights %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
-                <ul class="insights">
-                    {% for item in data.insights %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
             </section>
-            {% endif %}
 
             <section class="grid-2">
                 {% if data.estado_data %}
@@ -553,6 +579,8 @@
         const monthlyCotizaciones = {{ data.chart_cotizaciones_json | safe }};
         const operationLabels = {{ data.chart_tipo_operacion_labels_json | safe }};
         const operationValues = {{ data.chart_tipo_operacion_valores_json | safe }};
+        const clientLabels = {{ data.chart_cliente_labels_json | safe }};
+        const clientValues = {{ data.chart_cliente_valores_json | safe }};
         const channelLabels = {{ data.chart_canal_labels_json | safe }};
         const channelValues = {{ data.chart_canal_valores_json | safe }};
         const clientTypeLabels = {{ data.chart_tipo_cliente_labels_json | safe }};
@@ -679,6 +707,59 @@
             }
         });
 
+        new Chart(document.getElementById('clientValueChart'), {
+            type: 'bar',
+            data: {
+                labels: clientLabels,
+                datasets: [{
+                    label: 'Valor del negocio',
+                    data: clientValues,
+                    backgroundColor: '#00A6A6',
+                    borderRadius: 10,
+                    maxBarThickness: 60
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                layout: { padding: { right: 12 } },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#24324A',
+                        anchor: 'end',
+                        align: 'right',
+                        font: { weight: '700', size: 11 },
+                        formatter: (value) => value > 0 ? moneyFormat(value) : ''
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return moneyFormat(context.raw);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#55657D',
+                            callback: function(value) {
+                                return moneyFormat(value);
+                            }
+                        },
+                        grid: { color: 'rgba(148,163,184,0.15)' }
+                    },
+                    y: {
+                        ticks: { color: '#55657D' },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
         new Chart(document.getElementById('channelChart'), {
             type: 'bar',
             data: {
@@ -686,7 +767,7 @@
                 datasets: [{
                     label: 'Solicitudes',
                     data: channelValues,
-                    backgroundColor: '#00A6A6',
+                    backgroundColor: '#7B61FF',
                     borderRadius: 10
                 }]
             },

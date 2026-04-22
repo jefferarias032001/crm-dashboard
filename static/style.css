@@ -18,6 +18,7 @@
     --green: #2A9D8F;
     --navy: #0E2742;
     --pink: #D946EF;
+    --cyan: #06B6D4;
 
     --sidebar-text: #eef4ff;
 }
@@ -219,7 +220,7 @@ body {
 
 .cards {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(9, 1fr);
     gap: 18px;
     margin-bottom: 24px;
 }
@@ -283,14 +284,20 @@ body {
 .accent-orange { border-top: 5px solid var(--orange); }
 .accent-orange::after { background: var(--orange); }
 
-.accent-cyan { border-top: 5px solid var(--teal); }
-.accent-cyan::after { background: var(--teal); }
+.accent-cyan { border-top: 5px solid var(--cyan); }
+.accent-cyan::after { background: var(--cyan); }
 
 .accent-gold { border-top: 5px solid var(--gold); }
 .accent-gold::after { background: var(--gold); }
 
 .accent-pink { border-top: 5px solid var(--pink); }
 .accent-pink::after { background: var(--pink); }
+
+.accent-teal { border-top: 5px solid var(--teal); }
+.accent-teal::after { background: var(--teal); }
+
+.accent-navy { border-top: 5px solid var(--navy); }
+.accent-navy::after { background: var(--navy); }
 
 .grid-2 {
     display: grid;
@@ -353,6 +360,11 @@ body {
 .chart-title-purple {
     color: var(--purple);
     border-left-color: var(--purple);
+}
+
+.chart-title-cyan {
+    color: var(--cyan);
+    border-left-color: var(--cyan);
 }
 
 .badge {
@@ -498,9 +510,15 @@ tbody tr:hover td {
     box-shadow: var(--shadow);
 }
 
-@media (max-width: 1700px) {
+@media (max-width: 1800px) {
     .cards {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+@media (max-width: 1400px) {
+    .cards {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
