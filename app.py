@@ -10,7 +10,7 @@ from flask import Flask, render_template
 app = Flask(__name__)
 
 # Si el Excel está dentro de la carpeta del proyecto
-DEFAULT_EXCEL_PATH = r"C:\Users\jarias\OneDrive - TRACTOCAR LOGISTICS SAS\Archivos de Andres Felipe Vera Gomez - CRM\BD CRM 16042026.xlsx"
+DEFAULT_EXCEL_PATH = "BD CRM 14042026.xlsx"
 SHEET_NAME = "BD"
 
 
