@@ -144,17 +144,29 @@ body {
     color: #111827;
 }
 
-.btn-filter {
+.btn-filter,
+.btn-export {
     width: 100%;
     margin-top: 8px;
     border: none;
     border-radius: 14px;
     padding: 12px 16px;
-    background: linear-gradient(135deg, var(--blue), var(--teal));
     color: white;
     font-weight: 700;
     cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-filter {
+    background: linear-gradient(135deg, var(--blue), var(--teal));
     box-shadow: 0 10px 20px rgba(11,95,255,0.25);
+}
+
+.btn-export {
+    background: linear-gradient(135deg, var(--gold), #f59e0b);
+    box-shadow: 0 10px 20px rgba(245, 158, 11, 0.25);
 }
 
 .sidebar-label {
@@ -498,6 +510,12 @@ tbody tr:nth-child(even) td {
 
 tbody tr:hover td {
     background: #f3f7ff;
+}
+
+tfoot .total-row td {
+    background: #eaf2ff;
+    font-weight: 800;
+    color: #0f172a;
 }
 
 .error-box {

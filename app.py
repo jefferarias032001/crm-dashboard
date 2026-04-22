@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from io import BytesIO
 import json
 
 import pandas as pd
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 
 app = Flask(__name__)
 
@@ -104,12 +105,7 @@ def get_filter_options(df: pd.DataFrame) -> dict:
     def options_for(col: str) -> list[str]:
         if col not in df.columns:
             return []
-        vals = (
-            df[col]
-            .dropna()
-            .astype(str)
-            .str.strip()
-        )
+        vals = df[col].dropna().astype(str).str.strip()
         vals = vals[vals != ""]
         return sorted(vals.unique().tolist())
 
@@ -154,6 +150,19 @@ def apply_filters(df: pd.DataFrame, filters: dict) -> pd.DataFrame:
         filtered = filtered[filtered["periodo"].astype(str) == mes]
 
     return filtered
+
+
+def parse_filters_from_request() -> dict:
+    return {
+        "canal": request.args.get("canal", ""),
+        "tipo_cliente": request.args.get("tipo_cliente", ""),
+        "tipo_solicitud": request.args.get("tipo_solicitud", ""),
+        "tipo_operacion": request.args.get("tipo_operacion", ""),
+        "estado": request.args.get("estado", ""),
+        "estado_cotizacion": request.args.get("estado_cotizacion", ""),
+        "responsable_cotizacion": request.args.get("responsable_cotizacion", ""),
+        "mes": request.args.get("mes", ""),
+    }
 
 
 def load_data() -> pd.DataFrame:
@@ -295,6 +304,20 @@ def load_data() -> pd.DataFrame:
     df["tiene_cotizacion"] = df["fecha_ingreso_cotizacion_dt"].notna()
     df["cotizacion_cerrada"] = df["fecha_cierre_cotizacion_dt"].notna()
 
+    # Solo consideramos como datos de cotización reales si existe ingreso de cotización
+    # o si el estado de cotización tiene un valor real distinto a no aplica.
+    if "estado_cotizacion" in df.columns:
+        estado_cot_lower = df["estado_cotizacion"].str.lower()
+        df["estado_cotizacion_valido"] = (
+            df["tiene_cotizacion"] |
+            (
+                (df["estado_cotizacion"] != "") &
+                ~estado_cot_lower.isin(["no aplica", "n/a", "na", "ninguno"])
+            )
+        )
+    else:
+        df["estado_cotizacion_valido"] = df["tiene_cotizacion"]
+
     return df
 
 
@@ -303,6 +326,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         return {}
 
     working_df = df_filtered.copy() if not df_filtered.empty else df_unfiltered_for_trend.copy()
+    cot_df = working_df[working_df["estado_cotizacion_valido"]].copy() if "estado_cotizacion_valido" in working_df.columns else working_df.copy()
 
     current_period = working_df["periodo"].max()
     previous_period = current_period - 1 if pd.notna(current_period) else None
@@ -342,13 +366,12 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     previous_cotizaciones = int(previous_df["tiene_cotizacion"].sum()) if not previous_df.empty else 0
     previous_tasa_cotizacion = round((previous_cotizaciones / previous_solicitudes) * 100, 1) if previous_solicitudes else 0
 
-    # Negocios ganados / perdidos
     negocios_ganados = 0
     negocios_perdidos = 0
     tasa_exito = 0
 
-    if "estado_cotizacion" in working_df.columns:
-        estado_cot_lower = working_df["estado_cotizacion"].str.lower()
+    if "estado_cotizacion" in cot_df.columns:
+        estado_cot_lower = cot_df["estado_cotizacion"].str.lower()
 
         mask_ganados = (
             estado_cot_lower.str.contains("aprob", na=False) |
@@ -370,7 +393,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         total_con_resultado = negocios_ganados + negocios_perdidos
         tasa_exito = round((negocios_ganados / total_con_resultado) * 100, 1) if total_con_resultado > 0 else 0
 
-    # Tendencia mensual SIEMPRE con dataset sin filtro de mes
     monthly = (
         df_unfiltered_for_trend.groupby("periodo")
         .agg(
@@ -408,7 +430,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             "pct_cotizaciones": pct_cot,
         }
 
-    # Canal
     canal_data = []
     if "canal" in working_df.columns:
         canal = (
@@ -426,7 +447,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
                 "porcentaje": round((row["cantidad"] / total_canal) * 100, 1) if total_canal else 0
             })
 
-    # Tipo cliente
     tipo_cliente_data = []
     if "tipo_cliente" in working_df.columns:
         tipo_cliente = (
@@ -438,7 +458,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         tipo_cliente = tipo_cliente[(tipo_cliente["tipo_cliente"] != "") & (tipo_cliente["cantidad"] > 0)]
         tipo_cliente_data = tipo_cliente.to_dict(orient="records")
 
-    # Tipo solicitud
     tipo_solicitud_data = []
     if "tipo_solicitud" in working_df.columns:
         tipo_solicitud = (
@@ -450,7 +469,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         tipo_solicitud = tipo_solicitud[(tipo_solicitud["tipo_solicitud"] != "") & (tipo_solicitud["cantidad"] > 0)]
         tipo_solicitud_data = tipo_solicitud.head(10).to_dict(orient="records")
 
-    # Tipo operación con valor > 0
     tipo_operacion_data = []
     if "tipo_operacion" in working_df.columns and "valor_estimado_negocio" in working_df.columns:
         tipo_operacion = (
@@ -474,7 +492,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
 
         tipo_operacion_data = tipo_operacion.to_dict(orient="records")
 
-    # Valor por cliente con valor > 0
     valor_cliente_data = []
     if "cliente" in working_df.columns and "valor_estimado_negocio" in working_df.columns:
         cliente = (
@@ -495,7 +512,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         ).fillna(0)
         valor_cliente_data = cliente.head(10).to_dict(orient="records")
 
-    # Estado
     estado_data = []
     if "estado" in working_df.columns:
         estado = (
@@ -507,34 +523,38 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         estado = estado[(estado["estado"] != "") & (estado["cantidad"] > 0)]
         estado_data = estado.to_dict(orient="records")
 
-    # Estado cotización
     estado_cotizacion_data = []
-    if "estado_cotizacion" in working_df.columns:
+    if "estado_cotizacion" in cot_df.columns:
         estado_cot = (
-            working_df.groupby("estado_cotizacion")
+            cot_df.groupby("estado_cotizacion")
             .size()
             .reset_index(name="cantidad")
             .sort_values("cantidad", ascending=False)
         )
-        estado_cot = estado_cot[(estado_cot["estado_cotizacion"] != "") & (estado_cot["cantidad"] > 0)]
+        estado_cot = estado_cot[
+            (estado_cot["estado_cotizacion"] != "") &
+            ~estado_cot["estado_cotizacion"].str.lower().isin(["no aplica", "n/a", "na", "ninguno"]) &
+            (estado_cot["cantidad"] > 0)
+        ]
         estado_cotizacion_data = estado_cot.to_dict(orient="records")
 
-    # Responsable
     responsable_data = []
-    if "responsable_cotizacion" in working_df.columns:
+    if "responsable_cotizacion" in cot_df.columns:
         responsable = (
-            working_df.groupby("responsable_cotizacion")
+            cot_df.groupby("responsable_cotizacion")
             .agg(
                 cantidad=("responsable_cotizacion", "count"),
                 valor_total=("valor_estimado_negocio", "sum")
             )
             .reset_index()
-            .sort_values(["cantidad", "valor_total"], ascending=[False, False])
+            .sort_values(["valor_total", "cantidad"], ascending=[False, False])
         )
-        responsable = responsable[(responsable["responsable_cotizacion"] != "") & (responsable["cantidad"] > 0)]
+        responsable = responsable[
+            (responsable["responsable_cotizacion"] != "") &
+            (responsable["valor_total"] > 0)
+        ]
         responsable_data = responsable.to_dict(orient="records")
 
-    # Detalle
     detalle = working_df.copy()
     detalle["fecha_ingreso_solicitud_fmt"] = detalle["fecha_ingreso_solicitud_dt"].dt.strftime("%Y-%m-%d %H:%M")
     detalle["fecha_respuesta_solicitud_fmt"] = detalle["fecha_respuesta_solicitud_dt"].dt.strftime("%Y-%m-%d %H:%M")
@@ -566,7 +586,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         .to_dict(orient="records")
     )
 
-    # Insights
     insights = []
 
     if trend_summary:
@@ -596,10 +615,9 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
 
     if negocios_perdidos > 0:
         insights.append(
-            f"Se identifican {negocios_perdidos} negocios perdidos, lo que sugiere revisar causa comercial y acción a seguir."
+            f"Se identifican {negocios_perdidos} negocios perdidos; conviene revisar estado de cotización, observaciones y acción a seguir."
         )
 
-    # Charts
     chart_labels = [row["mes"] for row in monthly_data]
     chart_solicitudes = [row["solicitudes"] for row in monthly_data]
     chart_cotizaciones = [row["cotizaciones"] for row in monthly_data]
@@ -685,24 +703,11 @@ def currency_filter(value):
 def index():
     try:
         df = load_data()
-
-        filters = {
-            "canal": request.args.get("canal", ""),
-            "tipo_cliente": request.args.get("tipo_cliente", ""),
-            "tipo_solicitud": request.args.get("tipo_solicitud", ""),
-            "tipo_operacion": request.args.get("tipo_operacion", ""),
-            "estado": request.args.get("estado", ""),
-            "estado_cotizacion": request.args.get("estado_cotizacion", ""),
-            "responsable_cotizacion": request.args.get("responsable_cotizacion", ""),
-            "mes": request.args.get("mes", ""),
-        }
-
+        filters = parse_filters_from_request()
         filter_options = get_filter_options(df)
 
-        # Aplicar todos los filtros
         filtered_df = apply_filters(df, filters)
 
-        # Para tendencias: ignorar filtro de mes, mantener los demás
         filters_without_month = filters.copy()
         filters_without_month["mes"] = ""
         trend_df = apply_filters(df, filters_without_month)
@@ -724,6 +729,69 @@ def index():
             filters={},
             filter_options={}
         )
+
+
+@app.route("/exportar_excel")
+def exportar_excel():
+    df = load_data()
+    filters = parse_filters_from_request()
+    filtered_df = apply_filters(df, filters).copy()
+
+    export_cols = [
+        "fecha_ingreso_solicitud_dt",
+        "fecha_respuesta_solicitud_dt",
+        "fecha_ingreso_cotizacion_dt",
+        "fecha_cierre_cotizacion_dt",
+        "canal",
+        "cliente",
+        "tipo_cliente",
+        "contacto",
+        "celular",
+        "tipo_solicitud",
+        "tipo_operacion",
+        "estado",
+        "estado_cotizacion",
+        "responsable_cotizacion",
+        "accion_a_seguir",
+        "valor_estimado_negocio",
+        "observacion",
+    ]
+    export_cols = [c for c in export_cols if c in filtered_df.columns]
+    export_df = filtered_df[export_cols].copy()
+
+    rename_export = {
+        "fecha_ingreso_solicitud_dt": "Fecha ingreso solicitud",
+        "fecha_respuesta_solicitud_dt": "Fecha respuesta solicitud",
+        "fecha_ingreso_cotizacion_dt": "Fecha ingreso cotización",
+        "fecha_cierre_cotizacion_dt": "Fecha cierre cotización",
+        "canal": "Canal",
+        "cliente": "Cliente",
+        "tipo_cliente": "Tipo de cliente",
+        "contacto": "Contacto",
+        "celular": "Celular",
+        "tipo_solicitud": "Tipo de solicitud",
+        "tipo_operacion": "Tipo de operación",
+        "estado": "Estado",
+        "estado_cotizacion": "Estado cotización",
+        "responsable_cotizacion": "Responsable cotización",
+        "accion_a_seguir": "Acción a seguir",
+        "valor_estimado_negocio": "Valor estimado negocio",
+        "observacion": "Observación",
+    }
+    export_df = export_df.rename(columns=rename_export)
+
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        export_df.to_excel(writer, index=False, sheet_name="CRM Filtrado")
+
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name="crm_filtrado.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
 
 if __name__ == "__main__":

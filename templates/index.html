@@ -108,6 +108,22 @@
                 </div>
 
                 <button class="btn-filter" type="submit">Aplicar filtros</button>
+
+                <a
+                    class="btn-export"
+                    href="{{ url_for('exportar_excel',
+                        mes=filters.mes,
+                        canal=filters.canal,
+                        tipo_cliente=filters.tipo_cliente,
+                        tipo_solicitud=filters.tipo_solicitud,
+                        tipo_operacion=filters.tipo_operacion,
+                        estado=filters.estado,
+                        estado_cotizacion=filters.estado_cotizacion,
+                        responsable_cotizacion=filters.responsable_cotizacion
+                    ) }}"
+                >
+                    Exportar Excel
+                </a>
             </form>
 
             {% if data %}
@@ -385,13 +401,21 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {% set ns = namespace(total=0) %}
                                 {% for row in data.estado_data %}
+                                {% set ns.total = ns.total + row.cantidad %}
                                 <tr>
                                     <td>{{ row.estado }}</td>
                                     <td>{{ row.cantidad }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td>Total</td>
+                                    <td>{{ ns.total }}</td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -412,13 +436,21 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {% set ns = namespace(total=0) %}
                                 {% for row in data.estado_cotizacion_data %}
+                                {% set ns.total = ns.total + row.cantidad %}
                                 <tr>
                                     <td>{{ row.estado_cotizacion }}</td>
                                     <td>{{ row.cantidad }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td>Total</td>
+                                    <td>{{ ns.total }}</td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -443,7 +475,10 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {% set ns = namespace(cantidad=0, valor=0) %}
                                 {% for row in data.valor_cliente_data %}
+                                {% set ns.cantidad = ns.cantidad + row.cantidad %}
+                                {% set ns.valor = ns.valor + row.valor_total %}
                                 <tr>
                                     <td>{{ row.cliente }}</td>
                                     <td>{{ row.cantidad }}</td>
@@ -452,6 +487,14 @@
                                 </tr>
                                 {% endfor %}
                             </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td>Total</td>
+                                    <td>{{ ns.cantidad }}</td>
+                                    <td>{{ ns.valor | currency }}</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -473,7 +516,10 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {% set ns = namespace(cantidad=0, valor=0) %}
                                 {% for row in data.responsable_data %}
+                                {% set ns.cantidad = ns.cantidad + row.cantidad %}
+                                {% set ns.valor = ns.valor + row.valor_total %}
                                 <tr>
                                     <td>{{ row.responsable_cotizacion }}</td>
                                     <td>{{ row.cantidad }}</td>
@@ -481,6 +527,13 @@
                                 </tr>
                                 {% endfor %}
                             </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td>Total</td>
+                                    <td>{{ ns.cantidad }}</td>
+                                    <td>{{ ns.valor | currency }}</td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -504,7 +557,10 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% set ns = namespace(cantidad=0, valor=0) %}
                             {% for row in data.tipo_operacion_data %}
+                            {% set ns.cantidad = ns.cantidad + row.cantidad %}
+                            {% set ns.valor = ns.valor + row.valor_total %}
                             <tr>
                                 <td>{{ row.tipo_operacion }}</td>
                                 <td>{{ row.cantidad }}</td>
@@ -513,6 +569,14 @@
                             </tr>
                             {% endfor %}
                         </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td>Total</td>
+                                <td>{{ ns.cantidad }}</td>
+                                <td>{{ ns.valor | currency }}</td>
+                                <td>100%</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </section>
@@ -544,7 +608,12 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% set ns = namespace(valor=0, cantidad=0) %}
                             {% for row in data.detalle_data %}
+                            {% set ns.cantidad = ns.cantidad + 1 %}
+                            {% if row.valor_estimado_negocio is defined %}
+                                {% set ns.valor = ns.valor + row.valor_estimado_negocio %}
+                            {% endif %}
                             <tr>
                                 <td>{{ row.fecha_ingreso_solicitud_fmt if row.fecha_ingreso_solicitud_fmt is defined else '' }}</td>
                                 <td>{{ row.canal if row.canal is defined else '' }}</td>
@@ -562,6 +631,13 @@
                             </tr>
                             {% endfor %}
                         </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td colspan="11">Total registros: {{ ns.cantidad }}</td>
+                                <td>{{ ns.valor | currency }}</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </section>
