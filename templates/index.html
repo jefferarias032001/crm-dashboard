@@ -3,13 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard CRM</title>
+    <title>Dashboard CRM Ejecutivo</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Plugin para etiquetas visibles -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
 <body>
@@ -21,9 +17,98 @@
                 </div>
                 <div>
                     <h2>Dashboard CRM</h2>
-                    <p>Indicadores ejecutivos</p>
+                    <p>Vista ejecutiva comercial</p>
                 </div>
             </div>
+
+            <form method="get" class="filters-card">
+                <div class="filters-header">
+                    <h3>Filtros</h3>
+                    <a class="clear-link" href="/">Limpiar</a>
+                </div>
+
+                <div class="filter-group">
+                    <label>Mes</label>
+                    <select name="mes">
+                        <option value="">Todos</option>
+                        {% for item in filter_options.mes %}
+                        <option value="{{ item }}" {% if filters.mes == item %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Canal</label>
+                    <select name="canal">
+                        <option value="">Todos</option>
+                        {% for item in filter_options.canal %}
+                        <option value="{{ item }}" {% if filters.canal == item %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Tipo de cliente</label>
+                    <select name="tipo_cliente">
+                        <option value="">Todos</option>
+                        {% for item in filter_options.tipo_cliente %}
+                        <option value="{{ item }}" {% if filters.tipo_cliente == item %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Tipo de solicitud</label>
+                    <select name="tipo_solicitud">
+                        <option value="">Todos</option>
+                        {% for item in filter_options.tipo_solicitud %}
+                        <option value="{{ item }}" {% if filters.tipo_solicitud == item %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Tipo de operación</label>
+                    <select name="tipo_operacion">
+                        <option value="">Todos</option>
+                        {% for item in filter_options.tipo_operacion %}
+                        <option value="{{ item }}" {% if filters.tipo_operacion == item %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Estado</label>
+                    <select name="estado">
+                        <option value="">Todos</option>
+                        {% for item in filter_options.estado %}
+                        <option value="{{ item }}" {% if filters.estado == item %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Estado cotización</label>
+                    <select name="estado_cotizacion">
+                        <option value="">Todos</option>
+                        {% for item in filter_options.estado_cotizacion %}
+                        <option value="{{ item }}" {% if filters.estado_cotizacion == item %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Responsable</label>
+                    <select name="responsable_cotizacion">
+                        <option value="">Todos</option>
+                        {% for item in filter_options.responsable_cotizacion %}
+                        <option value="{{ item }}" {% if filters.responsable_cotizacion == item %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button class="btn-filter" type="submit">Aplicar filtros</button>
+            </form>
 
             {% if data %}
             <div class="sidebar-card">
@@ -47,8 +132,8 @@
             <header class="topbar">
                 <div class="topbar-title">
                     <div>
-                        <h1>Dashboard CRM</h1>
-                        <p>Seguimiento comercial, conversión, pendientes, tendencias y valor del negocio</p>
+                        <h1>Dashboard CRM Ejecutivo</h1>
+                        <p>Solicitudes, tiempos de atención, cotizaciones, estados comerciales y valor del negocio</p>
                     </div>
                     <div class="topbar-logo-wrap">
                         <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo empresa" class="topbar-logo">
@@ -67,7 +152,7 @@
             <section class="cards">
                 {% if data.total_solicitudes > 0 %}
                 <div class="card accent-blue">
-                    <span class="card-kicker">Gestión</span>
+                    <span class="card-kicker">Volumen</span>
                     <h3>Solicitudes</h3>
                     <div class="metric">{{ data.total_solicitudes }}</div>
                 </div>
@@ -75,41 +160,49 @@
 
                 {% if data.total_cotizaciones > 0 %}
                 <div class="card accent-purple">
-                    <span class="card-kicker">Comercial</span>
+                    <span class="card-kicker">Pipeline</span>
                     <h3>Cotizaciones</h3>
                     <div class="metric">{{ data.total_cotizaciones }}</div>
                 </div>
                 {% endif %}
 
-                {% if data.conversion_total > 0 %}
+                {% if data.tasa_cotizacion > 0 %}
                 <div class="card accent-green">
-                    <span class="card-kicker">Eficiencia</span>
-                    <h3>Conversión total</h3>
-                    <div class="metric">{{ data.conversion_total }}%</div>
+                    <span class="card-kicker">Conversión</span>
+                    <h3>Tasa de cotización</h3>
+                    <div class="metric">{{ data.tasa_cotizacion }}%</div>
                 </div>
                 {% endif %}
 
-                {% if data.pendientes_count > 0 %}
+                {% if data.tiempo_respuesta_promedio_horas > 0 %}
                 <div class="card accent-orange">
-                    <span class="card-kicker">Seguimiento</span>
-                    <h3>Pendientes</h3>
-                    <div class="metric">{{ data.pendientes_count }}</div>
+                    <span class="card-kicker">Servicio</span>
+                    <h3>Resp. prom. solicitud</h3>
+                    <div class="metric">{{ data.tiempo_respuesta_promedio_txt }}</div>
+                </div>
+                {% endif %}
+
+                {% if data.tiempo_cierre_promedio_dias > 0 %}
+                <div class="card accent-cyan">
+                    <span class="card-kicker">Operación</span>
+                    <h3>Cierre prom. cotización</h3>
+                    <div class="metric">{{ data.tiempo_cierre_promedio_txt }}</div>
                 </div>
                 {% endif %}
 
                 {% if data.valor_total > 0 %}
-                <div class="card accent-cyan">
+                <div class="card accent-gold">
                     <span class="card-kicker">Negocio</span>
-                    <h3>Valor estimado</h3>
+                    <h3>Valor estimado total</h3>
                     <div class="metric">{{ data.valor_total | currency }}</div>
                 </div>
                 {% endif %}
 
-                {% if data.valor_promedio_por_negocio > 0 %}
+                {% if data.valor_promedio_negocio > 0 %}
                 <div class="card accent-pink">
                     <span class="card-kicker">Ticket</span>
-                    <h3>Valor prom. por negocio</h3>
-                    <div class="metric">{{ data.valor_promedio_por_negocio | currency }}</div>
+                    <h3>Valor prom. negocio</h3>
+                    <div class="metric">{{ data.valor_promedio_negocio | currency }}</div>
                 </div>
                 {% endif %}
             </section>
@@ -117,7 +210,7 @@
             <section class="grid-2">
                 <div class="panel panel-highlight">
                     <div class="panel-header">
-                        <h2>Resumen del período actual</h2>
+                        <h2>Resumen período actual</h2>
                         <span class="badge badge-primary">{{ data.current_period_label }}</span>
                     </div>
                     <div class="mini-stats">
@@ -133,10 +226,10 @@
                             <strong>{{ data.current_cotizaciones }}</strong>
                         </div>
                         {% endif %}
-                        {% if data.current_conversion > 0 %}
+                        {% if data.current_tasa_cotizacion > 0 %}
                         <div class="mini-stat">
-                            <span>Conversión</span>
-                            <strong>{{ data.current_conversion }}%</strong>
+                            <span>Tasa</span>
+                            <strong>{{ data.current_tasa_cotizacion }}%</strong>
                         </div>
                         {% endif %}
                     </div>
@@ -144,7 +237,7 @@
 
                 <div class="panel panel-highlight-secondary">
                     <div class="panel-header">
-                        <h2>Resumen del período anterior</h2>
+                        <h2>Resumen período anterior</h2>
                         <span class="badge badge-secondary">{{ data.previous_period_label }}</span>
                     </div>
                     <div class="mini-stats">
@@ -160,10 +253,10 @@
                             <strong>{{ data.previous_cotizaciones }}</strong>
                         </div>
                         {% endif %}
-                        {% if data.previous_conversion > 0 %}
+                        {% if data.previous_tasa_cotizacion > 0 %}
                         <div class="mini-stat">
-                            <span>Conversión</span>
-                            <strong>{{ data.previous_conversion }}%</strong>
+                            <span>Tasa</span>
+                            <strong>{{ data.previous_tasa_cotizacion }}%</strong>
                         </div>
                         {% endif %}
                     </div>
@@ -176,7 +269,6 @@
                     <h2>Comportamiento mensual</h2>
                     <span class="badge">Tendencia</span>
                 </div>
-
                 <div class="trend-grid">
                     <div class="trend-box">
                         <span>Solicitudes</span>
@@ -215,101 +307,48 @@
                 </div>
             </section>
 
-            {% if data.monthly_data %}
+            <section class="grid-2">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="chart-title chart-title-teal">Solicitudes por canal</h2>
+                        <span class="badge">Canales</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="channelChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="chart-title chart-title-purple">Distribución por tipo de cliente</h2>
+                        <span class="badge">Segmentación</span>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="clientTypeChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            {% if data.insights %}
             <section class="panel">
                 <div class="panel-header">
-                    <h2>Histórico mensual</h2>
-                    <span class="badge">Mensual</span>
+                    <h2>Hallazgos ejecutivos</h2>
+                    <span class="badge">Insights</span>
                 </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Mes</th>
-                                <th>Solicitudes</th>
-                                <th>Cotizaciones</th>
-                                <th>Valor estimado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in data.monthly_data %}
-                            <tr>
-                                <td>{{ row.mes }}</td>
-                                <td>{{ row.solicitudes }}</td>
-                                <td>{{ row.cotizaciones }}</td>
-                                <td>{% if row.valor > 0 %}{{ row.valor | currency }}{% endif %}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                <ul class="insights">
+                    {% for item in data.insights %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
             </section>
             {% endif %}
 
             <section class="grid-2">
-                {% if data.medio_data %}
+                {% if data.estado_data %}
                 <div class="panel">
                     <div class="panel-header">
-                        <h2>Solicitudes por medio</h2>
-                        <span class="badge">Canales</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Medio</th>
-                                    <th>Cantidad</th>
-                                    <th>%</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in data.medio_data %}
-                                <tr>
-                                    <td>{{ row.medio }}</td>
-                                    <td>{{ row.cantidad }}</td>
-                                    <td>{{ row.porcentaje }}%</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                {% endif %}
-
-                {% if data.servicios_data %}
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Servicios más solicitados</h2>
-                        <span class="badge">Demanda</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Tipo de solicitud</th>
-                                    <th>Cantidad</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in data.servicios_data %}
-                                <tr>
-                                    <td>{{ row.servicio }}</td>
-                                    <td>{{ row.cantidad }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                {% endif %}
-            </section>
-
-            <section class="grid-2">
-                {% if data.estados_data %}
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Pipeline por estado</h2>
-                        <span class="badge">Pipeline</span>
+                        <h2>Estado de la solicitud</h2>
+                        <span class="badge">Proceso</span>
                     </div>
                     <div class="table-wrap">
                         <table>
@@ -320,15 +359,9 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for row in data.estados_data %}
+                                {% for row in data.estado_data %}
                                 <tr>
-                                    <td>
-                                        {% if row.estado_cotizacion is defined %}
-                                            {{ row.estado_cotizacion }}
-                                        {% elif row.estado_general is defined %}
-                                            {{ row.estado_general }}
-                                        {% endif %}
-                                    </td>
+                                    <td>{{ row.estado }}</td>
                                     <td>{{ row.cantidad }}</td>
                                 </tr>
                                 {% endfor %}
@@ -338,29 +371,25 @@
                 </div>
                 {% endif %}
 
-                {% if data.responsables_data %}
+                {% if data.estado_cotizacion_data %}
                 <div class="panel">
                     <div class="panel-header">
-                        <h2>Pendientes por responsable</h2>
-                        <span class="badge">Equipo</span>
+                        <h2>Estado de cotización</h2>
+                        <span class="badge">Seguimiento</span>
                     </div>
                     <div class="table-wrap">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Responsable</th>
-                                    <th>Pendientes</th>
-                                    <th>Antigüedad prom.</th>
-                                    <th>Más antiguo</th>
+                                    <th>Estado cotización</th>
+                                    <th>Cantidad</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for row in data.responsables_data %}
+                                {% for row in data.estado_cotizacion_data %}
                                 <tr>
-                                    <td>{{ row.responsable }}</td>
-                                    <td>{{ row.pendientes }}</td>
-                                    <td>{{ row.antiguedad_promedio }}</td>
-                                    <td>{{ row.caso_mas_antiguo }}</td>
+                                    <td>{{ row.estado_cotizacion }}</td>
+                                    <td>{{ row.cantidad }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -370,36 +399,67 @@
                 {% endif %}
             </section>
 
-            {% if data.clientes_valor_data %}
-            <section class="panel">
-                <div class="panel-header">
-                    <h2>Valor estimado por negocio / cliente</h2>
-                    <span class="badge">Revenue</span>
+            <section class="grid-2">
+                {% if data.valor_cliente_data %}
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Valor por cliente</h2>
+                        <span class="badge">Clientes</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Cantidad</th>
+                                    <th>Valor total</th>
+                                    <th>Valor prom.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in data.valor_cliente_data %}
+                                <tr>
+                                    <td>{{ row.cliente }}</td>
+                                    <td>{{ row.cantidad }}</td>
+                                    <td>{{ row.valor_total | currency }}</td>
+                                    <td>{{ row.valor_promedio | currency }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Cliente</th>
-                                <th>Cantidad negocios</th>
-                                <th>Valor total</th>
-                                <th>Valor prom. negocio</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in data.clientes_valor_data %}
-                            <tr>
-                                <td>{{ row.cliente }}</td>
-                                <td>{{ row.cantidad_negocios }}</td>
-                                <td>{{ row.valor | currency }}</td>
-                                <td>{{ row.valor_promedio_negocio | currency }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                {% endif %}
+
+                {% if data.responsable_data %}
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2>Gestión por responsable</h2>
+                        <span class="badge">Equipo</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Responsable</th>
+                                    <th>Cantidad</th>
+                                    <th>Valor total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in data.responsable_data %}
+                                <tr>
+                                    <td>{{ row.responsable_cotizacion }}</td>
+                                    <td>{{ row.cantidad }}</td>
+                                    <td>{{ row.valor_total | currency }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+                {% endif %}
             </section>
-            {% endif %}
 
             {% if data.tipo_operacion_data %}
             <section class="panel">
@@ -414,7 +474,7 @@
                                 <th>Tipo de operación</th>
                                 <th>Cantidad</th>
                                 <th>Valor total</th>
-                                <th>% participación</th>
+                                <th>% valor</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -423,7 +483,7 @@
                                 <td>{{ row.tipo_operacion }}</td>
                                 <td>{{ row.cantidad }}</td>
                                 <td>{{ row.valor_total | currency }}</td>
-                                <td>{{ row.porcentaje }}%</td>
+                                <td>{{ row.porcentaje_valor }}%</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -432,55 +492,47 @@
             </section>
             {% endif %}
 
-            {% if data.insights %}
+            {% if data.detalle_data %}
             <section class="panel">
                 <div class="panel-header">
-                    <h2>Hallazgos clave</h2>
-                    <span class="badge">Insights</span>
-                </div>
-                <ul class="insights">
-                    {% for item in data.insights %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
-            </section>
-            {% endif %}
-
-            {% if data.pending_table %}
-            <section class="panel">
-                <div class="panel-header">
-                    <h2>Cotizaciones pendientes</h2>
-                    <span class="badge">Seguimiento</span>
+                    <h2>Detalle de solicitudes</h2>
+                    <span class="badge">Base filtrada</span>
                 </div>
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
                                 <th>Fecha ingreso</th>
-                                <th>Días</th>
+                                <th>Canal</th>
                                 <th>Cliente</th>
+                                <th>Tipo cliente</th>
+                                <th>Contacto</th>
                                 <th>Tipo solicitud</th>
                                 <th>Tipo operación</th>
-                                <th>Responsable</th>
-                                <th>Estado general</th>
+                                <th>Estado</th>
                                 <th>Estado cotización</th>
+                                <th>Responsable</th>
                                 <th>Acción a seguir</th>
                                 <th>Valor</th>
+                                <th>Observación</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for row in data.pending_table %}
+                            {% for row in data.detalle_data %}
                             <tr>
-                                <td>{{ row.fecha_solicitud_fmt }}</td>
-                                <td>{{ row.dias_desde_ingreso }}</td>
+                                <td>{{ row.fecha_ingreso_solicitud_fmt if row.fecha_ingreso_solicitud_fmt is defined else '' }}</td>
+                                <td>{{ row.canal if row.canal is defined else '' }}</td>
                                 <td>{{ row.cliente if row.cliente is defined else '' }}</td>
-                                <td>{{ row.servicio if row.servicio is defined else '' }}</td>
+                                <td>{{ row.tipo_cliente if row.tipo_cliente is defined else '' }}</td>
+                                <td>{{ row.contacto if row.contacto is defined else '' }}</td>
+                                <td>{{ row.tipo_solicitud if row.tipo_solicitud is defined else '' }}</td>
                                 <td>{{ row.tipo_operacion if row.tipo_operacion is defined else '' }}</td>
-                                <td>{{ row.responsable if row.responsable is defined else '' }}</td>
-                                <td>{{ row.estado_general if row.estado_general is defined else '' }}</td>
+                                <td>{{ row.estado if row.estado is defined else '' }}</td>
                                 <td>{{ row.estado_cotizacion if row.estado_cotizacion is defined else '' }}</td>
-                                <td>{{ row.accion_seguir if row.accion_seguir is defined else '' }}</td>
-                                <td>{% if row.valor_estimado is defined and row.valor_estimado > 0 %}{{ row.valor_estimado | currency }}{% endif %}</td>
+                                <td>{{ row.responsable_cotizacion if row.responsable_cotizacion is defined else '' }}</td>
+                                <td>{{ row.accion_a_seguir if row.accion_a_seguir is defined else '' }}</td>
+                                <td>{% if row.valor_estimado_negocio is defined and row.valor_estimado_negocio > 0 %}{{ row.valor_estimado_negocio | currency }}{% endif %}</td>
+                                <td>{{ row.observacion if row.observacion is defined else '' }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -501,6 +553,10 @@
         const monthlyCotizaciones = {{ data.chart_cotizaciones_json | safe }};
         const operationLabels = {{ data.chart_tipo_operacion_labels_json | safe }};
         const operationValues = {{ data.chart_tipo_operacion_valores_json | safe }};
+        const channelLabels = {{ data.chart_canal_labels_json | safe }};
+        const channelValues = {{ data.chart_canal_valores_json | safe }};
+        const clientTypeLabels = {{ data.chart_tipo_cliente_labels_json | safe }};
+        const clientTypeValues = {{ data.chart_tipo_cliente_valores_json | safe }};
 
         const moneyFormat = (value) => {
             try {
@@ -510,185 +566,185 @@
             }
         };
 
-        const monthlyTrendCtx = document.getElementById('monthlyTrendChart');
-        if (monthlyTrendCtx) {
-            new Chart(monthlyTrendCtx, {
-                type: 'line',
-                data: {
-                    labels: monthlyLabels,
-                    datasets: [
-                        {
-                            label: 'Solicitudes',
-                            data: monthlySolicitudes,
-                            borderColor: '#0F5A8A',
-                            backgroundColor: 'rgba(15, 90, 138, 0.14)',
-                            tension: 0.35,
-                            fill: true,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            pointBackgroundColor: '#0F5A8A',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2
-                        },
-                        {
-                            label: 'Cotizaciones',
-                            data: monthlyCotizaciones,
-                            borderColor: '#D4A017',
-                            backgroundColor: 'rgba(212, 160, 23, 0.14)',
-                            tension: 0.35,
-                            fill: true,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            pointBackgroundColor: '#D4A017',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2
-                        }
-                    ]
+        new Chart(document.getElementById('monthlyTrendChart'), {
+            type: 'line',
+            data: {
+                labels: monthlyLabels,
+                datasets: [
+                    {
+                        label: 'Solicitudes',
+                        data: monthlySolicitudes,
+                        borderColor: '#0B5FFF',
+                        backgroundColor: 'rgba(11,95,255,0.10)',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#0B5FFF',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'Cotizaciones',
+                        data: monthlyCotizaciones,
+                        borderColor: '#FFB703',
+                        backgroundColor: 'rgba(255,183,3,0.10)',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#FFB703',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { top: 24 } },
+                plugins: {
+                    legend: {
+                        labels: { color: '#24324A', font: { weight: '700' } }
+                    },
+                    datalabels: {
+                        color: '#24324A',
+                        anchor: 'end',
+                        align: 'top',
+                        font: { weight: '700', size: 11 },
+                        formatter: (value) => value > 0 ? value : ''
+                    }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: {
-                        padding: {
-                            top: 24
-                        }
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0, color: '#55657D' },
+                        grid: { color: 'rgba(148,163,184,0.15)' }
                     },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                usePointStyle: true,
-                                color: '#24324A',
-                                font: {
-                                    weight: '700'
-                                }
-                            }
-                        },
-                        datalabels: {
-                            color: '#24324A',
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 4,
-                            font: {
-                                weight: '700',
-                                size: 11
-                            },
-                            formatter: function(value) {
-                                return value > 0 ? value : '';
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.raw;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0,
-                                color: '#55657D'
-                            },
-                            grid: {
-                                color: 'rgba(148, 163, 184, 0.15)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                color: '#55657D'
-                            },
-                            grid: {
-                                display: false
-                            }
-                        }
+                    x: {
+                        ticks: { color: '#55657D' },
+                        grid: { display: false }
                     }
                 }
-            });
-        }
+            }
+        });
 
-        const operationValueCtx = document.getElementById('operationValueChart');
-        if (operationValueCtx) {
-            new Chart(operationValueCtx, {
-                type: 'bar',
-                data: {
-                    labels: operationLabels,
-                    datasets: [
-                        {
-                            label: 'Valor del negocio',
-                            data: operationValues,
-                            backgroundColor: [
-                                '#0F5A8A',
-                                '#D4A017',
-                                '#0D9488',
-                                '#7C3AED',
-                                '#EA580C',
-                                '#DB2777'
-                            ],
-                            borderRadius: 10,
-                            maxBarThickness: 60
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    layout: {
-                        padding: {
-                            top: 28
-                        }
+        new Chart(document.getElementById('operationValueChart'), {
+            type: 'bar',
+            data: {
+                labels: operationLabels,
+                datasets: [{
+                    label: 'Valor del negocio',
+                    data: operationValues,
+                    backgroundColor: ['#0B5FFF', '#00A6A6', '#FFB703', '#7B61FF', '#F25F5C', '#2A9D8F'],
+                    borderRadius: 10,
+                    maxBarThickness: 60
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { top: 28 } },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#24324A',
+                        anchor: 'end',
+                        align: 'end',
+                        font: { weight: '700', size: 11 },
+                        formatter: (value) => value > 0 ? moneyFormat(value) : ''
                     },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        datalabels: {
-                            color: '#24324A',
-                            anchor: 'end',
-                            align: 'end',
-                            offset: 4,
-                            font: {
-                                weight: '700',
-                                size: 11
-                            },
-                            formatter: function(value) {
-                                return value > 0 ? moneyFormat(value) : '';
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return moneyFormat(context.raw);
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: '#55657D',
-                                callback: function(value) {
-                                    return moneyFormat(value);
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(148, 163, 184, 0.15)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                color: '#55657D'
-                            },
-                            grid: {
-                                display: false
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return moneyFormat(context.raw);
                             }
                         }
                     }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#55657D',
+                            callback: function(value) {
+                                return moneyFormat(value);
+                            }
+                        },
+                        grid: { color: 'rgba(148,163,184,0.15)' }
+                    },
+                    x: {
+                        ticks: { color: '#55657D' },
+                        grid: { display: false }
+                    }
                 }
-            });
-        }
+            }
+        });
+
+        new Chart(document.getElementById('channelChart'), {
+            type: 'bar',
+            data: {
+                labels: channelLabels,
+                datasets: [{
+                    label: 'Solicitudes',
+                    data: channelValues,
+                    backgroundColor: '#00A6A6',
+                    borderRadius: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { top: 24 } },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#24324A',
+                        anchor: 'end',
+                        align: 'end',
+                        font: { weight: '700', size: 11 },
+                        formatter: (value) => value > 0 ? value : ''
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0, color: '#55657D' },
+                        grid: { color: 'rgba(148,163,184,0.15)' }
+                    },
+                    x: {
+                        ticks: { color: '#55657D' },
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('clientTypeChart'), {
+            type: 'doughnut',
+            data: {
+                labels: clientTypeLabels,
+                datasets: [{
+                    data: clientTypeValues,
+                    backgroundColor: ['#0B5FFF', '#FFB703', '#00A6A6', '#7B61FF', '#F25F5C', '#2A9D8F', '#264653'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#24324A', font: { weight: '700' } }
+                    },
+                    datalabels: {
+                        color: '#24324A',
+                        font: { weight: '700', size: 11 },
+                        formatter: (value) => value > 0 ? value : ''
+                    }
+                }
+            }
+        });
     </script>
     {% endif %}
 </body>
