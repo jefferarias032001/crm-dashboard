@@ -8,23 +8,33 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
-<body>
+<body class="theme-{{ theme }}">
     <div class="app-shell">
         <aside class="sidebar">
-            <div class="brand">
-                <div class="brand-logo-wrap">
-                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo empresa" class="brand-logo">
-                </div>
-                <div>
-                    <h2>Dashboard CRM</h2>
-                    <p>Vista ejecutiva comercial</p>
+            <div class="sidebar-top">
+                <div class="brand">
+                    <div class="brand-logo-wrap">
+                        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo empresa" class="brand-logo">
+                    </div>
+                    <div class="brand-copy">
+                        <h2>Dashboard CRM</h2>
+                        <p>Vista ejecutiva comercial</p>
+                    </div>
                 </div>
             </div>
 
             <form method="get" class="filters-card">
                 <div class="filters-header">
                     <h3>Filtros</h3>
-                    <a class="clear-link" href="/">Limpiar</a>
+                    <a class="clear-link" href="/?theme={{ theme }}">Limpiar</a>
+                </div>
+
+                <div class="filter-group">
+                    <label>Tema visual</label>
+                    <select name="theme">
+                        <option value="A" {% if theme == "A" %}selected{% endif %}>A · Corporativo oscuro</option>
+                        <option value="B" {% if theme == "B" %}selected{% endif %}>B · Premium claro</option>
+                    </select>
                 </div>
 
                 <div class="filter-group">
@@ -112,6 +122,7 @@
                 <a
                     class="btn-export"
                     href="{{ url_for('exportar_excel',
+                        theme=theme,
                         mes=filters.mes,
                         canal=filters.canal,
                         tipo_cliente=filters.tipo_cliente,
@@ -127,188 +138,197 @@
             </form>
 
             {% if data %}
-            <div class="sidebar-card">
-                <span class="sidebar-label">Última actualización</span>
-                <strong>{{ data.generated_at }}</strong>
-            </div>
+            <div class="sidebar-stats">
+                <div class="sidebar-card">
+                    <span class="sidebar-label">Última actualización</span>
+                    <strong>{{ data.generated_at }}</strong>
+                </div>
 
-            <div class="sidebar-card">
-                <span class="sidebar-label">Período actual</span>
-                <strong>{{ data.current_period_label }}</strong>
-            </div>
+                <div class="sidebar-card">
+                    <span class="sidebar-label">Período actual</span>
+                    <strong>{{ data.current_period_label }}</strong>
+                </div>
 
-            <div class="sidebar-card">
-                <span class="sidebar-label">Período anterior</span>
-                <strong>{{ data.previous_period_label }}</strong>
+                <div class="sidebar-card">
+                    <span class="sidebar-label">Período anterior</span>
+                    <strong>{{ data.previous_period_label }}</strong>
+                </div>
             </div>
             {% endif %}
         </aside>
 
         <main class="main-content">
-            <header class="topbar">
-                <div class="topbar-title">
-                    <div>
-                        <h1>Dashboard CRM Ejecutivo</h1>
-                        <p>Solicitudes, tiempos de atención, cotizaciones, estados comerciales y valor del negocio</p>
-                    </div>
-                    <div class="topbar-logo-wrap">
-                        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo empresa" class="topbar-logo">
-                    </div>
+            <header class="hero-panel">
+                <div class="hero-copy">
+                    <div class="hero-eyebrow">Business Intelligence Comercial</div>
+                    <h1>Dashboard CRM Ejecutivo</h1>
+                    <p>Solicitudes, tiempos de atención, cotizaciones, estados comerciales y valor del negocio.</p>
+                </div>
+                <div class="hero-logo-wrap">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo empresa" class="hero-logo">
                 </div>
             </header>
 
             {% if error %}
-                <div class="error-box">
-                    <h2>Error</h2>
-                    <p>{{ error }}</p>
-                </div>
+            <div class="error-box">
+                <h2>Error</h2>
+                <p>{{ error }}</p>
+            </div>
             {% endif %}
 
             {% if data %}
-            <section class="cards">
+            <section class="kpi-grid">
                 {% if data.total_solicitudes > 0 %}
-                <div class="card accent-blue">
-                    <span class="card-kicker">Volumen</span>
+                <article class="kpi-card kpi-blue">
+                    <span class="kpi-tag">Volumen</span>
                     <h3>Solicitudes</h3>
-                    <div class="metric">{{ data.total_solicitudes }}</div>
-                </div>
+                    <div class="kpi-value">{{ data.total_solicitudes }}</div>
+                </article>
                 {% endif %}
 
                 {% if data.total_cotizaciones > 0 %}
-                <div class="card accent-purple">
-                    <span class="card-kicker">Pipeline</span>
+                <article class="kpi-card kpi-purple">
+                    <span class="kpi-tag">Pipeline</span>
                     <h3>Cotizaciones</h3>
-                    <div class="metric">{{ data.total_cotizaciones }}</div>
-                </div>
+                    <div class="kpi-value">{{ data.total_cotizaciones }}</div>
+                </article>
                 {% endif %}
 
                 {% if data.tasa_cotizacion > 0 %}
-                <div class="card accent-green">
-                    <span class="card-kicker">Conversión</span>
+                <article class="kpi-card kpi-green">
+                    <span class="kpi-tag">Conversión</span>
                     <h3>Tasa de cotización</h3>
-                    <div class="metric">{{ data.tasa_cotizacion }}%</div>
-                </div>
+                    <div class="kpi-value">{{ data.tasa_cotizacion }}%</div>
+                </article>
                 {% endif %}
 
                 {% if data.negocios_ganados > 0 %}
-                <div class="card accent-teal">
-                    <span class="card-kicker">Éxito</span>
+                <article class="kpi-card kpi-teal">
+                    <span class="kpi-tag">Éxito</span>
                     <h3>Cotizaciones aprobadas</h3>
-                    <div class="metric">{{ data.negocios_ganados }}</div>
-                </div>
+                    <div class="kpi-value">{{ data.negocios_ganados }}</div>
+                </article>
                 {% endif %}
 
                 {% if data.negocios_perdidos > 0 %}
-                <div class="card accent-orange">
-                    <span class="card-kicker">Riesgo</span>
+                <article class="kpi-card kpi-red">
+                    <span class="kpi-tag">Riesgo</span>
                     <h3>Cotizaciones perdidas</h3>
-                    <div class="metric">{{ data.negocios_perdidos }}</div>
-                </div>
+                    <div class="kpi-value">{{ data.negocios_perdidos }}</div>
+                </article>
                 {% endif %}
 
                 {% if data.tasa_exito > 0 %}
-                <div class="card accent-gold">
-                    <span class="card-kicker">Resultado</span>
+                <article class="kpi-card kpi-gold">
+                    <span class="kpi-tag">Resultado</span>
                     <h3>Tasa de éxito</h3>
-                    <div class="metric">{{ data.tasa_exito }}%</div>
-                </div>
+                    <div class="kpi-value">{{ data.tasa_exito }}%</div>
+                </article>
                 {% endif %}
 
                 {% if data.tiempo_respuesta_promedio_horas > 0 %}
-                <div class="card accent-cyan">
-                    <span class="card-kicker">Servicio</span>
+                <article class="kpi-card kpi-cyan">
+                    <span class="kpi-tag">Servicio</span>
                     <h3>Resp. prom. solicitud</h3>
-                    <div class="metric">{{ data.tiempo_respuesta_promedio_txt }}</div>
-                </div>
+                    <div class="kpi-value">{{ data.tiempo_respuesta_promedio_txt }}</div>
+                </article>
                 {% endif %}
 
                 {% if data.tiempo_cierre_promedio_dias > 0 %}
-                <div class="card accent-pink">
-                    <span class="card-kicker">Operación</span>
+                <article class="kpi-card kpi-pink">
+                    <span class="kpi-tag">Operación</span>
                     <h3>Cierre prom. cotización</h3>
-                    <div class="metric">{{ data.tiempo_cierre_promedio_txt }}</div>
-                </div>
+                    <div class="kpi-value">{{ data.tiempo_cierre_promedio_txt }}</div>
+                </article>
                 {% endif %}
 
                 {% if data.valor_total > 0 %}
-                <div class="card accent-navy">
-                    <span class="card-kicker">Negocio</span>
+                <article class="kpi-card kpi-dark">
+                    <span class="kpi-tag">Negocio</span>
                     <h3>Valor estimado del negocio</h3>
-                    <div class="metric">{{ data.valor_total | currency }}</div>
-                </div>
+                    <div class="kpi-value">{{ data.valor_total | currency }}</div>
+                </article>
                 {% endif %}
             </section>
 
-            <section class="grid-2 compact-grid">
-                <div class="panel panel-highlight compact-panel">
-                    <div class="panel-header">
-                        <h2>Resumen período actual</h2>
-                        <span class="badge badge-primary">{{ data.current_period_label }}</span>
+            <section class="grid-2">
+                <section class="panel panel-accent-blue">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Período</span>
+                            <h2>Resumen actual</h2>
+                        </div>
+                        <span class="pill pill-blue">{{ data.current_period_label }}</span>
                     </div>
-                    <div class="mini-stats">
+                    <div class="mini-grid">
                         {% if data.current_solicitudes > 0 %}
-                        <div class="mini-stat">
+                        <div class="mini-kpi">
                             <span>Solicitudes</span>
                             <strong>{{ data.current_solicitudes }}</strong>
                         </div>
                         {% endif %}
                         {% if data.current_cotizaciones > 0 %}
-                        <div class="mini-stat">
+                        <div class="mini-kpi">
                             <span>Cotizaciones</span>
                             <strong>{{ data.current_cotizaciones }}</strong>
                         </div>
                         {% endif %}
                         {% if data.current_tasa_cotizacion > 0 %}
-                        <div class="mini-stat">
+                        <div class="mini-kpi">
                             <span>Tasa</span>
                             <strong>{{ data.current_tasa_cotizacion }}%</strong>
                         </div>
                         {% endif %}
                     </div>
-                </div>
+                </section>
 
-                <div class="panel panel-highlight-secondary compact-panel">
-                    <div class="panel-header">
-                        <h2>Resumen período anterior</h2>
-                        <span class="badge badge-secondary">{{ data.previous_period_label }}</span>
+                <section class="panel panel-accent-gold">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Período</span>
+                            <h2>Resumen anterior</h2>
+                        </div>
+                        <span class="pill pill-gold">{{ data.previous_period_label }}</span>
                     </div>
-                    <div class="mini-stats">
+                    <div class="mini-grid">
                         {% if data.previous_solicitudes > 0 %}
-                        <div class="mini-stat">
+                        <div class="mini-kpi">
                             <span>Solicitudes</span>
                             <strong>{{ data.previous_solicitudes }}</strong>
                         </div>
                         {% endif %}
                         {% if data.previous_cotizaciones > 0 %}
-                        <div class="mini-stat">
+                        <div class="mini-kpi">
                             <span>Cotizaciones</span>
                             <strong>{{ data.previous_cotizaciones }}</strong>
                         </div>
                         {% endif %}
                         {% if data.previous_tasa_cotizacion > 0 %}
-                        <div class="mini-stat">
+                        <div class="mini-kpi">
                             <span>Tasa</span>
                             <strong>{{ data.previous_tasa_cotizacion }}%</strong>
                         </div>
                         {% endif %}
                     </div>
-                </div>
+                </section>
             </section>
 
             {% if data.trend_summary %}
-            <section class="panel compact-panel">
-                <div class="panel-header">
-                    <h2>Comportamiento mensual</h2>
-                    <span class="badge">Tendencia</span>
+            <section class="panel full-panel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Performance</span>
+                        <h2>Comportamiento mensual</h2>
+                    </div>
+                    <span class="pill">Tendencia</span>
                 </div>
                 <div class="trend-grid">
-                    <div class="trend-box">
+                    <div class="trend-box trend-blue">
                         <span>Solicitudes</span>
                         <strong>{{ data.trend_summary.delta_solicitudes }}</strong>
                         <p>{{ data.trend_summary.pct_solicitudes }}% vs {{ data.trend_summary.previous_month }}</p>
                     </div>
-
-                    <div class="trend-box">
+                    <div class="trend-box trend-gold">
                         <span>Cotizaciones</span>
                         <strong>{{ data.trend_summary.delta_cotizaciones }}</strong>
                         <p>{{ data.trend_summary.pct_cotizaciones }}% vs {{ data.trend_summary.previous_month }}</p>
@@ -318,79 +338,100 @@
             {% endif %}
 
             <section class="grid-2">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="chart-title chart-title-blue">Tendencia mensual de solicitudes y cotizaciones</h2>
-                        <span class="badge">Líneas</span>
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Tendencia</span>
+                            <h2>Tendencia mensual de solicitudes y cotizaciones</h2>
+                        </div>
+                        <span class="pill">Líneas</span>
                     </div>
-                    <div class="chart-box chart-box-small">
+                    <div class="chart-box chart-box-lg">
                         <canvas id="monthlyTrendChart"></canvas>
                     </div>
-                </div>
+                </section>
 
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="chart-title chart-title-gold">Valor del negocio por tipo de operación</h2>
-                        <span class="badge">Columnas</span>
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Valor</span>
+                            <h2>Valor del negocio por tipo de operación</h2>
+                        </div>
+                        <span class="pill">Columnas</span>
                     </div>
-                    <div class="chart-box chart-box-small">
+                    <div class="chart-box chart-box-lg">
                         <canvas id="operationValueChart"></canvas>
                     </div>
-                </div>
+                </section>
             </section>
 
             <section class="grid-2">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="chart-title chart-title-teal">Valor del negocio por cliente</h2>
-                        <span class="badge">Clientes</span>
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Clientes</span>
+                            <h2>Valor del negocio por cliente</h2>
+                        </div>
+                        <span class="pill">Top clientes</span>
                     </div>
-                    <div class="chart-box chart-box-medium">
+                    <div class="chart-box chart-box-md">
                         <canvas id="clientValueChart"></canvas>
                     </div>
-                </div>
+                </section>
 
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="chart-title chart-title-purple">Solicitudes por canal</h2>
-                        <span class="badge">Canales</span>
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Canales</span>
+                            <h2>Solicitudes por canal</h2>
+                        </div>
+                        <span class="pill">Origen</span>
                     </div>
-                    <div class="chart-box chart-box-medium">
+                    <div class="chart-box chart-box-md">
                         <canvas id="channelChart"></canvas>
                     </div>
-                </div>
+                </section>
             </section>
 
             <section class="grid-2">
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2 class="chart-title chart-title-cyan">Distribución por tipo de cliente</h2>
-                        <span class="badge">Segmentación</span>
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Segmentación</span>
+                            <h2>Distribución por tipo de cliente</h2>
+                        </div>
+                        <span class="pill">Dona</span>
                     </div>
-                    <div class="chart-box chart-box-medium">
+                    <div class="chart-box chart-box-md">
                         <canvas id="clientTypeChart"></canvas>
                     </div>
-                </div>
+                </section>
 
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Titulares ejecutivos</h2>
-                        <span class="badge">Insights</span>
+                <section class="panel panel-insight">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Insights</span>
+                            <h2>Titulares ejecutivos</h2>
+                        </div>
+                        <span class="pill">Resumen</span>
                     </div>
-                    <ul class="insights">
+                    <ul class="insight-list">
                         {% for item in data.insights %}
                         <li>{{ item }}</li>
                         {% endfor %}
                     </ul>
-                </div>
+                </section>
             </section>
 
             <section class="grid-2">
                 {% if data.estado_data %}
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Estado de la solicitud</h2>
-                        <span class="badge">Proceso</span>
+                <section class="panel panel-strong">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Proceso</span>
+                            <h2>Estado de la solicitud</h2>
+                        </div>
+                        <span class="pill">Pipeline</span>
                     </div>
                     <div class="table-wrap">
                         <table>
@@ -418,14 +459,17 @@
                             </tfoot>
                         </table>
                     </div>
-                </div>
+                </section>
                 {% endif %}
 
                 {% if data.estado_cotizacion_data %}
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Estado de cotización</h2>
-                        <span class="badge">Seguimiento</span>
+                <section class="panel panel-strong">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Seguimiento</span>
+                            <h2>Estado de cotización</h2>
+                        </div>
+                        <span class="pill">Tracking</span>
                     </div>
                     <div class="table-wrap">
                         <table>
@@ -453,16 +497,19 @@
                             </tfoot>
                         </table>
                     </div>
-                </div>
+                </section>
                 {% endif %}
             </section>
 
             <section class="grid-2">
                 {% if data.valor_cliente_data %}
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Valor por cliente</h2>
-                        <span class="badge">Clientes</span>
+                <section class="panel panel-strong">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Negocio</span>
+                            <h2>Valor por cliente</h2>
+                        </div>
+                        <span class="pill">Participación</span>
                     </div>
                     <div class="table-wrap">
                         <table>
@@ -470,8 +517,8 @@
                                 <tr>
                                     <th>Cliente</th>
                                     <th>Cantidad</th>
-                                    <th>Valor total</th>
-                                    <th>Valor prom.</th>
+                                    <th>Valor estimado</th>
+                                    <th>% participación</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -483,7 +530,7 @@
                                     <td>{{ row.cliente }}</td>
                                     <td>{{ row.cantidad }}</td>
                                     <td>{{ row.valor_total | currency }}</td>
-                                    <td>{{ row.valor_promedio | currency }}</td>
+                                    <td>{{ row.porcentaje_participacion }}%</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -492,19 +539,22 @@
                                     <td>Total</td>
                                     <td>{{ ns.cantidad }}</td>
                                     <td>{{ ns.valor | currency }}</td>
-                                    <td></td>
+                                    <td>100%</td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
-                </div>
+                </section>
                 {% endif %}
 
                 {% if data.responsable_data %}
-                <div class="panel">
-                    <div class="panel-header">
-                        <h2>Gestión por responsable</h2>
-                        <span class="badge">Equipo</span>
+                <section class="panel panel-strong">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Equipo</span>
+                            <h2>Gestión por responsable</h2>
+                        </div>
+                        <span class="pill">Comercial</span>
                     </div>
                     <div class="table-wrap">
                         <table>
@@ -512,7 +562,8 @@
                                 <tr>
                                     <th>Responsable</th>
                                     <th>Cantidad</th>
-                                    <th>Valor total</th>
+                                    <th>Valor estimado</th>
+                                    <th>% participación</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -524,6 +575,7 @@
                                     <td>{{ row.responsable_cotizacion }}</td>
                                     <td>{{ row.cantidad }}</td>
                                     <td>{{ row.valor_total | currency }}</td>
+                                    <td>{{ row.porcentaje_participacion }}%</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -532,19 +584,23 @@
                                     <td>Total</td>
                                     <td>{{ ns.cantidad }}</td>
                                     <td>{{ ns.valor | currency }}</td>
+                                    <td>100%</td>
                                 </tr>
                             </tfoot>
                         </table>
                     </div>
-                </div>
+                </section>
                 {% endif %}
             </section>
 
             {% if data.tipo_operacion_data %}
-            <section class="panel">
-                <div class="panel-header">
-                    <h2>Detalle por tipo de operación</h2>
-                    <span class="badge">Operación</span>
+            <section class="panel panel-strong">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Operación</span>
+                        <h2>Detalle por tipo de operación</h2>
+                    </div>
+                    <span class="pill">Mix operativo</span>
                 </div>
                 <div class="table-wrap">
                     <table>
@@ -552,8 +608,8 @@
                             <tr>
                                 <th>Tipo de operación</th>
                                 <th>Cantidad</th>
-                                <th>Valor total</th>
-                                <th>% valor</th>
+                                <th>Valor estimado</th>
+                                <th>% participación</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -565,7 +621,7 @@
                                 <td>{{ row.tipo_operacion }}</td>
                                 <td>{{ row.cantidad }}</td>
                                 <td>{{ row.valor_total | currency }}</td>
-                                <td>{{ row.porcentaje_valor }}%</td>
+                                <td>{{ row.porcentaje_participacion }}%</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -584,9 +640,12 @@
 
             {% if data.detalle_data %}
             <section class="panel">
-                <div class="panel-header">
-                    <h2>Detalle de solicitudes</h2>
-                    <span class="badge">Base filtrada</span>
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Base filtrada</span>
+                        <h2>Detalle de solicitudes</h2>
+                    </div>
+                    <span class="pill">Últimos registros</span>
                 </div>
                 <div class="table-wrap">
                     <table>
@@ -670,6 +729,11 @@
             }
         };
 
+        const commonLabelStyle = {
+            color: '#1e293b',
+            font: { weight: '700', size: 10 }
+        };
+
         new Chart(document.getElementById('monthlyTrendChart'), {
             type: 'line',
             data: {
@@ -691,7 +755,7 @@
                         label: 'Cotizaciones',
                         data: monthlyCotizaciones,
                         borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245,158,11,0.14)',
+                        backgroundColor: 'rgba(245,158,11,0.12)',
                         tension: 0.35,
                         fill: true,
                         pointRadius: 4,
@@ -704,27 +768,26 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 18 } },
+                layout: { padding: { top: 14 } },
                 plugins: {
                     legend: {
-                        labels: { color: '#24324A', font: { weight: '700' } }
+                        labels: { color: '#334155', font: { weight: '700' } }
                     },
                     datalabels: {
-                        color: '#24324A',
+                        ...commonLabelStyle,
                         anchor: 'end',
                         align: 'top',
-                        font: { weight: '700', size: 10 },
                         formatter: (value) => value > 0 ? value : ''
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { precision: 0, color: '#55657D' },
-                        grid: { color: 'rgba(148,163,184,0.18)' }
+                        ticks: { color: '#64748b', precision: 0 },
+                        grid: { color: 'rgba(148,163,184,0.16)' }
                     },
                     x: {
-                        ticks: { color: '#55657D' },
+                        ticks: { color: '#64748b' },
                         grid: { display: false }
                     }
                 }
@@ -746,21 +809,18 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 20 } },
+                layout: { padding: { top: 18 } },
                 plugins: {
                     legend: { display: false },
                     datalabels: {
-                        color: '#24324A',
+                        ...commonLabelStyle,
                         anchor: 'end',
                         align: 'end',
-                        font: { weight: '700', size: 10 },
                         formatter: (value) => value > 0 ? moneyFormat(value) : ''
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                return moneyFormat(context.raw);
-                            }
+                            label: (context) => moneyFormat(context.raw)
                         }
                     }
                 },
@@ -768,15 +828,13 @@
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            color: '#55657D',
-                            callback: function(value) {
-                                return moneyFormat(value);
-                            }
+                            color: '#64748b',
+                            callback: (value) => moneyFormat(value)
                         },
-                        grid: { color: 'rgba(148,163,184,0.18)' }
+                        grid: { color: 'rgba(148,163,184,0.16)' }
                     },
                     x: {
-                        ticks: { color: '#55657D' },
+                        ticks: { color: '#64748b' },
                         grid: { display: false }
                     }
                 }
@@ -792,28 +850,24 @@
                     data: clientValues,
                     backgroundColor: '#0f766e',
                     borderRadius: 10,
-                    maxBarThickness: 38
+                    maxBarThickness: 34
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 indexAxis: 'y',
-                layout: { padding: { right: 12 } },
                 plugins: {
                     legend: { display: false },
                     datalabels: {
-                        color: '#24324A',
+                        ...commonLabelStyle,
                         anchor: 'end',
                         align: 'right',
-                        font: { weight: '700', size: 10 },
                         formatter: (value) => value > 0 ? moneyFormat(value) : ''
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                return moneyFormat(context.raw);
-                            }
+                            label: (context) => moneyFormat(context.raw)
                         }
                     }
                 },
@@ -821,15 +875,13 @@
                     x: {
                         beginAtZero: true,
                         ticks: {
-                            color: '#55657D',
-                            callback: function(value) {
-                                return moneyFormat(value);
-                            }
+                            color: '#64748b',
+                            callback: (value) => moneyFormat(value)
                         },
-                        grid: { color: 'rgba(148,163,184,0.18)' }
+                        grid: { color: 'rgba(148,163,184,0.16)' }
                     },
                     y: {
-                        ticks: { color: '#55657D' },
+                        ticks: { color: '#64748b' },
                         grid: { display: false }
                     }
                 }
@@ -851,25 +903,24 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 18 } },
+                layout: { padding: { top: 14 } },
                 plugins: {
                     legend: { display: false },
                     datalabels: {
-                        color: '#24324A',
+                        ...commonLabelStyle,
                         anchor: 'end',
                         align: 'end',
-                        font: { weight: '700', size: 10 },
                         formatter: (value) => value > 0 ? value : ''
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { precision: 0, color: '#55657D' },
-                        grid: { color: 'rgba(148,163,184,0.18)' }
+                        ticks: { color: '#64748b', precision: 0 },
+                        grid: { color: 'rgba(148,163,184,0.16)' }
                     },
                     x: {
-                        ticks: { color: '#55657D' },
+                        ticks: { color: '#64748b' },
                         grid: { display: false }
                     }
                 }
@@ -882,7 +933,7 @@
                 labels: clientTypeLabels,
                 datasets: [{
                     data: clientTypeValues,
-                    backgroundColor: ['#2563eb', '#f59e0b', '#0f766e', '#7c3aed', '#ef4444', '#0891b2', '#1f2937'],
+                    backgroundColor: ['#2563eb', '#f59e0b', '#0f766e', '#7c3aed', '#ef4444', '#0891b2', '#334155'],
                     borderWidth: 2,
                     borderColor: '#ffffff'
                 }]
@@ -893,11 +944,10 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { color: '#24324A', font: { weight: '700' } }
+                        labels: { color: '#334155', font: { weight: '700' } }
                     },
                     datalabels: {
-                        color: '#24324A',
-                        font: { weight: '700', size: 10 },
+                        ...commonLabelStyle,
                         formatter: (value) => value > 0 ? value : ''
                     }
                 }

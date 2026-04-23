@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from io import BytesIO
 import json
@@ -360,8 +360,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     tasa_cotizacion = round((total_cotizaciones / total_solicitudes) * 100, 1) if total_solicitudes else 0
 
     valor_total = float(working_df["valor_estimado_negocio"].fillna(0).sum()) if "valor_estimado_negocio" in working_df.columns else 0
-    negocios_con_valor = working_df[working_df["valor_estimado_negocio"] > 0].copy() if "valor_estimado_negocio" in working_df.columns else pd.DataFrame()
-    valor_promedio_negocio = float(negocios_con_valor["valor_estimado_negocio"].mean()) if len(negocios_con_valor) > 0 else 0
 
     tiempos_respuesta_validos = working_df[
         (working_df["horas_respuesta_solicitud"].notna()) & (working_df["horas_respuesta_solicitud"] >= 0)
@@ -484,8 +482,8 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             (tipo_operacion["valor_total"] > 0)
         ]
 
-        total_valor_operacion = tipo_operacion["valor_total"].sum()
-        tipo_operacion["porcentaje_valor"] = (
+        total_valor_operacion = float(tipo_operacion["valor_total"].sum())
+        tipo_operacion["porcentaje_participacion"] = (
             (tipo_operacion["valor_total"] / total_valor_operacion) * 100
         ).round(1) if total_valor_operacion > 0 else 0
 
@@ -506,9 +504,12 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             (cliente["cliente"] != "") &
             (cliente["valor_total"] > 0)
         ]
-        cliente["valor_promedio"] = (
-            cliente["valor_total"] / cliente["cantidad"]
-        ).fillna(0)
+
+        total_valor_clientes = float(cliente["valor_total"].sum())
+        cliente["porcentaje_participacion"] = (
+            (cliente["valor_total"] / total_valor_clientes) * 100
+        ).round(1) if total_valor_clientes > 0 else 0
+
         valor_cliente_data = cliente.head(10).to_dict(orient="records")
 
     estado_data = []
@@ -551,6 +552,12 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             (responsable["responsable_cotizacion"] != "") &
             (responsable["valor_total"] > 0)
         ]
+
+        total_valor_responsable = float(responsable["valor_total"].sum())
+        responsable["porcentaje_participacion"] = (
+            (responsable["valor_total"] / total_valor_responsable) * 100
+        ).round(1) if total_valor_responsable > 0 else 0
+
         responsable_data = responsable.to_dict(orient="records")
 
     detalle = working_df.copy()
@@ -603,7 +610,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         top_operacion = tipo_operacion_data[0]
         insights.append(
             f"El tipo de operación con mayor valor estimado es {top_operacion['tipo_operacion']}, "
-            f"con {top_operacion['porcentaje_valor']}% del valor del negocio filtrado."
+            f"con {top_operacion['porcentaje_participacion']}% del valor del negocio filtrado."
         )
 
     if negocios_ganados > 0:
@@ -629,7 +636,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     chart_tipo_cliente_valores = [row["cantidad"] for row in tipo_cliente_data]
 
     return {
-        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "generated_at": (datetime.utcnow() - timedelta(hours=5)).strftime("%Y-%m-%d %H:%M"),
         "current_period_label": month_label(current_period) if pd.notna(current_period) else "",
         "previous_period_label": month_label(previous_period) if previous_period is not None else "",
 
@@ -641,7 +648,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         "tiempo_cierre_promedio_dias": tiempo_cierre_promedio_dias,
         "tiempo_cierre_promedio_txt": hours_to_text(tiempo_cierre_promedio_dias * 24 if tiempo_cierre_promedio_dias else 0),
         "valor_total": valor_total,
-        "valor_promedio_negocio": valor_promedio_negocio,
 
         "negocios_ganados": negocios_ganados,
         "negocios_perdidos": negocios_perdidos,
@@ -700,6 +706,10 @@ def index():
         filters = parse_filters_from_request()
         filter_options = get_filter_options(df)
 
+        theme = request.args.get("theme", "A").upper()
+        if theme not in ["A", "B"]:
+            theme = "A"
+
         filtered_df = apply_filters(df, filters)
 
         filters_without_month = filters.copy()
@@ -713,7 +723,8 @@ def index():
             data=data,
             error=None,
             filters=filters,
-            filter_options=filter_options
+            filter_options=filter_options,
+            theme=theme
         )
     except Exception as e:
         return render_template(
@@ -721,7 +732,8 @@ def index():
             data=None,
             error=str(e),
             filters={},
-            filter_options={}
+            filter_options={},
+            theme="A"
         )
 
 
