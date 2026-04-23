@@ -330,8 +330,6 @@ def load_data() -> pd.DataFrame:
     df["tiene_cotizacion"] = df["fecha_ingreso_cotizacion_dt"].notna()
     df["cotizacion_cerrada"] = df["fecha_cierre_cotizacion_dt"].notna()
 
-    # Solo registros de cotización reales:
-    # Estado = Cotizacion y estado_cotizacion válido
     if "estado" in df.columns and "estado_cotizacion" in df.columns:
         estado_lower = clean_text(df["estado"]).str.lower()
         df["estado_cotizacion_valido"] = (
@@ -389,7 +387,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     previous_cotizaciones = int(previous_df["tiene_cotizacion"].sum()) if not previous_df.empty else 0
     previous_tasa_cotizacion = round((previous_cotizaciones / previous_solicitudes) * 100, 1) if previous_solicitudes else 0
 
-    negocios_ganados = int((cot_df["estado_cotizacion"] == "Aprobada").sum()) + int((cot_df["estado_cotizacion"] == "Ganada").sum()) if "estado_cotizacion" in cot_df.columns else 0
+    negocios_ganados = int((cot_df["estado_cotizacion"] == "Aprobada").sum()) if "estado_cotizacion" in cot_df.columns else 0
     negocios_perdidos = int((cot_df["estado_cotizacion"] == "Perdida").sum()) if "estado_cotizacion" in cot_df.columns else 0
     total_con_resultado = negocios_ganados + negocios_perdidos
     tasa_exito = round((negocios_ganados / total_con_resultado) * 100, 1) if total_con_resultado > 0 else 0
@@ -609,10 +607,10 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         )
 
     if negocios_ganados > 0:
-        insights.append(f"Se identifican {negocios_ganados} negocios aprobados o ganados en cotización.")
+        insights.append(f"Se identifican {negocios_ganados} cotizaciones aprobadas.")
 
     if negocios_perdidos > 0:
-        insights.append(f"Se identifican {negocios_perdidos} negocios perdidos en cotización.")
+        insights.append(f"Se identifican {negocios_perdidos} cotizaciones perdidas.")
 
     chart_labels = [row["mes"] for row in monthly_data]
     chart_solicitudes = [row["solicitudes"] for row in monthly_data]

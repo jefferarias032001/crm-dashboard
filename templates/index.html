@@ -193,7 +193,7 @@
                 {% if data.negocios_ganados > 0 %}
                 <div class="card accent-teal">
                     <span class="card-kicker">Éxito</span>
-                    <h3>Negocios ganados</h3>
+                    <h3>Cotizaciones aprobadas</h3>
                     <div class="metric">{{ data.negocios_ganados }}</div>
                 </div>
                 {% endif %}
@@ -201,7 +201,7 @@
                 {% if data.negocios_perdidos > 0 %}
                 <div class="card accent-orange">
                     <span class="card-kicker">Riesgo</span>
-                    <h3>Negocios perdidos</h3>
+                    <h3>Cotizaciones perdidas</h3>
                     <div class="metric">{{ data.negocios_perdidos }}</div>
                 </div>
                 {% endif %}
@@ -233,14 +233,14 @@
                 {% if data.valor_total > 0 %}
                 <div class="card accent-navy">
                     <span class="card-kicker">Negocio</span>
-                    <h3>Valor estimado total</h3>
+                    <h3>Valor estimado del negocio</h3>
                     <div class="metric">{{ data.valor_total | currency }}</div>
                 </div>
                 {% endif %}
             </section>
 
-            <section class="grid-2">
-                <div class="panel panel-highlight">
+            <section class="grid-2 compact-grid">
+                <div class="panel panel-highlight compact-panel">
                     <div class="panel-header">
                         <h2>Resumen período actual</h2>
                         <span class="badge badge-primary">{{ data.current_period_label }}</span>
@@ -267,7 +267,7 @@
                     </div>
                 </div>
 
-                <div class="panel panel-highlight-secondary">
+                <div class="panel panel-highlight-secondary compact-panel">
                     <div class="panel-header">
                         <h2>Resumen período anterior</h2>
                         <span class="badge badge-secondary">{{ data.previous_period_label }}</span>
@@ -296,7 +296,7 @@
             </section>
 
             {% if data.trend_summary %}
-            <section class="panel">
+            <section class="panel compact-panel">
                 <div class="panel-header">
                     <h2>Comportamiento mensual</h2>
                     <span class="badge">Tendencia</span>
@@ -323,7 +323,7 @@
                         <h2 class="chart-title chart-title-blue">Tendencia mensual de solicitudes y cotizaciones</h2>
                         <span class="badge">Líneas</span>
                     </div>
-                    <div class="chart-box">
+                    <div class="chart-box chart-box-small">
                         <canvas id="monthlyTrendChart"></canvas>
                     </div>
                 </div>
@@ -333,7 +333,7 @@
                         <h2 class="chart-title chart-title-gold">Valor del negocio por tipo de operación</h2>
                         <span class="badge">Columnas</span>
                     </div>
-                    <div class="chart-box">
+                    <div class="chart-box chart-box-small">
                         <canvas id="operationValueChart"></canvas>
                     </div>
                 </div>
@@ -345,7 +345,7 @@
                         <h2 class="chart-title chart-title-teal">Valor del negocio por cliente</h2>
                         <span class="badge">Clientes</span>
                     </div>
-                    <div class="chart-box">
+                    <div class="chart-box chart-box-medium">
                         <canvas id="clientValueChart"></canvas>
                     </div>
                 </div>
@@ -355,7 +355,7 @@
                         <h2 class="chart-title chart-title-purple">Solicitudes por canal</h2>
                         <span class="badge">Canales</span>
                     </div>
-                    <div class="chart-box">
+                    <div class="chart-box chart-box-medium">
                         <canvas id="channelChart"></canvas>
                     </div>
                 </div>
@@ -367,14 +367,14 @@
                         <h2 class="chart-title chart-title-cyan">Distribución por tipo de cliente</h2>
                         <span class="badge">Segmentación</span>
                     </div>
-                    <div class="chart-box">
+                    <div class="chart-box chart-box-medium">
                         <canvas id="clientTypeChart"></canvas>
                     </div>
                 </div>
 
                 <div class="panel">
                     <div class="panel-header">
-                        <h2>Hallazgos ejecutivos</h2>
+                        <h2>Titulares ejecutivos</h2>
                         <span class="badge">Insights</span>
                     </div>
                     <ul class="insights">
@@ -678,24 +678,24 @@
                     {
                         label: 'Solicitudes',
                         data: monthlySolicitudes,
-                        borderColor: '#0B5FFF',
-                        backgroundColor: 'rgba(11,95,255,0.10)',
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37,99,235,0.18)',
                         tension: 0.35,
                         fill: true,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#0B5FFF',
+                        pointRadius: 4,
+                        pointBackgroundColor: '#2563eb',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2
                     },
                     {
                         label: 'Cotizaciones',
                         data: monthlyCotizaciones,
-                        borderColor: '#FFB703',
-                        backgroundColor: 'rgba(255,183,3,0.10)',
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245,158,11,0.14)',
                         tension: 0.35,
                         fill: true,
-                        pointRadius: 5,
-                        pointBackgroundColor: '#FFB703',
+                        pointRadius: 4,
+                        pointBackgroundColor: '#f59e0b',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2
                     }
@@ -704,7 +704,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 24 } },
+                layout: { padding: { top: 18 } },
                 plugins: {
                     legend: {
                         labels: { color: '#24324A', font: { weight: '700' } }
@@ -713,7 +713,7 @@
                         color: '#24324A',
                         anchor: 'end',
                         align: 'top',
-                        font: { weight: '700', size: 11 },
+                        font: { weight: '700', size: 10 },
                         formatter: (value) => value > 0 ? value : ''
                     }
                 },
@@ -721,7 +721,7 @@
                     y: {
                         beginAtZero: true,
                         ticks: { precision: 0, color: '#55657D' },
-                        grid: { color: 'rgba(148,163,184,0.15)' }
+                        grid: { color: 'rgba(148,163,184,0.18)' }
                     },
                     x: {
                         ticks: { color: '#55657D' },
@@ -736,24 +736,24 @@
             data: {
                 labels: operationLabels,
                 datasets: [{
-                    label: 'Valor del negocio',
+                    label: 'Valor estimado',
                     data: operationValues,
-                    backgroundColor: ['#0B5FFF', '#00A6A6', '#FFB703', '#7B61FF', '#F25F5C', '#2A9D8F'],
+                    backgroundColor: ['#2563eb', '#0f766e', '#f59e0b', '#7c3aed', '#ef4444', '#0891b2'],
                     borderRadius: 10,
-                    maxBarThickness: 60
+                    maxBarThickness: 52
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 28 } },
+                layout: { padding: { top: 20 } },
                 plugins: {
                     legend: { display: false },
                     datalabels: {
                         color: '#24324A',
                         anchor: 'end',
                         align: 'end',
-                        font: { weight: '700', size: 11 },
+                        font: { weight: '700', size: 10 },
                         formatter: (value) => value > 0 ? moneyFormat(value) : ''
                     },
                     tooltip: {
@@ -773,7 +773,7 @@
                                 return moneyFormat(value);
                             }
                         },
-                        grid: { color: 'rgba(148,163,184,0.15)' }
+                        grid: { color: 'rgba(148,163,184,0.18)' }
                     },
                     x: {
                         ticks: { color: '#55657D' },
@@ -788,11 +788,11 @@
             data: {
                 labels: clientLabels,
                 datasets: [{
-                    label: 'Valor del negocio',
+                    label: 'Valor estimado',
                     data: clientValues,
-                    backgroundColor: '#00A6A6',
+                    backgroundColor: '#0f766e',
                     borderRadius: 10,
-                    maxBarThickness: 60
+                    maxBarThickness: 38
                 }]
             },
             options: {
@@ -806,7 +806,7 @@
                         color: '#24324A',
                         anchor: 'end',
                         align: 'right',
-                        font: { weight: '700', size: 11 },
+                        font: { weight: '700', size: 10 },
                         formatter: (value) => value > 0 ? moneyFormat(value) : ''
                     },
                     tooltip: {
@@ -826,7 +826,7 @@
                                 return moneyFormat(value);
                             }
                         },
-                        grid: { color: 'rgba(148,163,184,0.15)' }
+                        grid: { color: 'rgba(148,163,184,0.18)' }
                     },
                     y: {
                         ticks: { color: '#55657D' },
@@ -843,21 +843,22 @@
                 datasets: [{
                     label: 'Solicitudes',
                     data: channelValues,
-                    backgroundColor: '#7B61FF',
-                    borderRadius: 10
+                    backgroundColor: '#7c3aed',
+                    borderRadius: 10,
+                    maxBarThickness: 56
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 24 } },
+                layout: { padding: { top: 18 } },
                 plugins: {
                     legend: { display: false },
                     datalabels: {
                         color: '#24324A',
                         anchor: 'end',
                         align: 'end',
-                        font: { weight: '700', size: 11 },
+                        font: { weight: '700', size: 10 },
                         formatter: (value) => value > 0 ? value : ''
                     }
                 },
@@ -865,7 +866,7 @@
                     y: {
                         beginAtZero: true,
                         ticks: { precision: 0, color: '#55657D' },
-                        grid: { color: 'rgba(148,163,184,0.15)' }
+                        grid: { color: 'rgba(148,163,184,0.18)' }
                     },
                     x: {
                         ticks: { color: '#55657D' },
@@ -881,7 +882,7 @@
                 labels: clientTypeLabels,
                 datasets: [{
                     data: clientTypeValues,
-                    backgroundColor: ['#0B5FFF', '#FFB703', '#00A6A6', '#7B61FF', '#F25F5C', '#2A9D8F', '#264653'],
+                    backgroundColor: ['#2563eb', '#f59e0b', '#0f766e', '#7c3aed', '#ef4444', '#0891b2', '#1f2937'],
                     borderWidth: 2,
                     borderColor: '#ffffff'
                 }]
@@ -896,7 +897,7 @@
                     },
                     datalabels: {
                         color: '#24324A',
-                        font: { weight: '700', size: 11 },
+                        font: { weight: '700', size: 10 },
                         formatter: (value) => value > 0 ? value : ''
                     }
                 }
