@@ -13,6 +13,14 @@ app = Flask(__name__)
 DEFAULT_EXCEL_PATH = "BD CRM 14042026.xlsx"
 SHEET_NAME = "BD"
 
+ESTADOS_COTIZACION_VALIDOS = {
+    "Aprobada",
+    "Enviada a Operaciones",
+    "Enviada al cliente",
+    "Enviar a operaciones",
+    "Perdida",
+}
+
 
 def find_column(df: pd.DataFrame, possible_names: list[str]) -> str | None:
     normalized = {str(col).strip().lower(): col for col in df.columns}
@@ -30,6 +38,25 @@ def clean_text(series: pd.Series) -> pd.Series:
         .str.strip()
         .replace({"nan": "", "None": ""})
     )
+
+
+def normalize_estado_cotizacion(series: pd.Series) -> pd.Series:
+    s = clean_text(series).str.lower()
+
+    replacements = {
+        "aprobada": "Aprobada",
+        "enviada a operaciones": "Enviada a Operaciones",
+        "enviada a operacion": "Enviada a Operaciones",
+        "enviada a operaciones tractocar": "Enviada a Operaciones",
+        "enviada al cliente": "Enviada al cliente",
+        "enviar a operaciones": "Enviar a operaciones",
+        "perdida": "Perdida",
+        "perdída": "Perdida",
+    }
+
+    normalized = s.replace(replacements)
+    normalized = normalized.where(normalized.isin(ESTADOS_COTIZACION_VALIDOS), "")
+    return normalized
 
 
 def to_datetime_safe(series: pd.Series) -> pd.Series:
@@ -60,13 +87,10 @@ def normalize_time_text(value: str) -> str:
 
 def combine_date_and_time(date_series: pd.Series, time_series: pd.Series) -> pd.Series:
     date_part = pd.to_datetime(date_series, errors="coerce", dayfirst=True)
-
     time_text = time_series.apply(normalize_time_text)
     combined = date_part.dt.strftime("%Y-%m-%d") + " " + time_text.astype(str)
-
     result = pd.to_datetime(combined, errors="coerce")
     fallback = pd.to_datetime(date_series, errors="coerce", dayfirst=True)
-
     return result.fillna(fallback)
 
 
@@ -117,7 +141,7 @@ def get_filter_options(df: pd.DataFrame) -> dict:
         "estado": options_for("estado"),
         "estado_cotizacion": options_for("estado_cotizacion"),
         "responsable_cotizacion": options_for("responsable_cotizacion"),
-        "mes": []
+        "mes": [],
     }
 
     if "periodo" in df.columns:
@@ -251,13 +275,15 @@ def load_data() -> pd.DataFrame:
         "tipo_solicitud",
         "tipo_operacion",
         "estado",
-        "estado_cotizacion",
         "responsable_cotizacion",
         "accion_a_seguir",
         "observacion",
     ]:
         if text_col in df.columns:
             df[text_col] = clean_text(df[text_col])
+
+    if "estado_cotizacion" in df.columns:
+        df["estado_cotizacion"] = normalize_estado_cotizacion(df["estado_cotizacion"])
 
     df["fecha_ingreso_solicitud_dt"] = combine_date_and_time(
         df["fecha_ingreso_solicitud"],
@@ -304,19 +330,16 @@ def load_data() -> pd.DataFrame:
     df["tiene_cotizacion"] = df["fecha_ingreso_cotizacion_dt"].notna()
     df["cotizacion_cerrada"] = df["fecha_cierre_cotizacion_dt"].notna()
 
-    # Solo consideramos como datos de cotización reales si existe ingreso de cotización
-    # o si el estado de cotización tiene un valor real distinto a no aplica.
-    if "estado_cotizacion" in df.columns:
-        estado_cot_lower = df["estado_cotizacion"].str.lower()
+    # Solo registros de cotización reales:
+    # Estado = Cotizacion y estado_cotizacion válido
+    if "estado" in df.columns and "estado_cotizacion" in df.columns:
+        estado_lower = clean_text(df["estado"]).str.lower()
         df["estado_cotizacion_valido"] = (
-            df["tiene_cotizacion"] |
-            (
-                (df["estado_cotizacion"] != "") &
-                ~estado_cot_lower.isin(["no aplica", "n/a", "na", "ninguno"])
-            )
+            (estado_lower == "cotizacion") &
+            (df["estado_cotizacion"].isin(ESTADOS_COTIZACION_VALIDOS))
         )
     else:
-        df["estado_cotizacion_valido"] = df["tiene_cotizacion"]
+        df["estado_cotizacion_valido"] = False
 
     return df
 
@@ -326,7 +349,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         return {}
 
     working_df = df_filtered.copy() if not df_filtered.empty else df_unfiltered_for_trend.copy()
-    cot_df = working_df[working_df["estado_cotizacion_valido"]].copy() if "estado_cotizacion_valido" in working_df.columns else working_df.copy()
+    cot_df = working_df[working_df["estado_cotizacion_valido"]].copy()
 
     current_period = working_df["periodo"].max()
     previous_period = current_period - 1 if pd.notna(current_period) else None
@@ -366,32 +389,10 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     previous_cotizaciones = int(previous_df["tiene_cotizacion"].sum()) if not previous_df.empty else 0
     previous_tasa_cotizacion = round((previous_cotizaciones / previous_solicitudes) * 100, 1) if previous_solicitudes else 0
 
-    negocios_ganados = 0
-    negocios_perdidos = 0
-    tasa_exito = 0
-
-    if "estado_cotizacion" in cot_df.columns:
-        estado_cot_lower = cot_df["estado_cotizacion"].str.lower()
-
-        mask_ganados = (
-            estado_cot_lower.str.contains("aprob", na=False) |
-            estado_cot_lower.str.contains("ganad", na=False) |
-            estado_cot_lower.str.contains("cerrad", na=False) |
-            estado_cot_lower.str.contains("acept", na=False)
-        )
-
-        mask_perdidos = (
-            estado_cot_lower.str.contains("perdid", na=False) |
-            estado_cot_lower.str.contains("no responde", na=False) |
-            estado_cot_lower.str.contains("rechaz", na=False) |
-            estado_cot_lower.str.contains("declin", na=False)
-        )
-
-        negocios_ganados = int(mask_ganados.sum())
-        negocios_perdidos = int(mask_perdidos.sum())
-
-        total_con_resultado = negocios_ganados + negocios_perdidos
-        tasa_exito = round((negocios_ganados / total_con_resultado) * 100, 1) if total_con_resultado > 0 else 0
+    negocios_ganados = int((cot_df["estado_cotizacion"] == "Aprobada").sum()) + int((cot_df["estado_cotizacion"] == "Ganada").sum()) if "estado_cotizacion" in cot_df.columns else 0
+    negocios_perdidos = int((cot_df["estado_cotizacion"] == "Perdida").sum()) if "estado_cotizacion" in cot_df.columns else 0
+    total_con_resultado = negocios_ganados + negocios_perdidos
+    tasa_exito = round((negocios_ganados / total_con_resultado) * 100, 1) if total_con_resultado > 0 else 0
 
     monthly = (
         df_unfiltered_for_trend.groupby("periodo")
@@ -533,7 +534,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         )
         estado_cot = estado_cot[
             (estado_cot["estado_cotizacion"] != "") &
-            ~estado_cot["estado_cotizacion"].str.lower().isin(["no aplica", "n/a", "na", "ninguno"]) &
             (estado_cot["cantidad"] > 0)
         ]
         estado_cotizacion_data = estado_cot.to_dict(orient="records")
@@ -609,14 +609,10 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         )
 
     if negocios_ganados > 0:
-        insights.append(
-            f"Se identifican {negocios_ganados} negocios ganados o aprobados dentro de la base filtrada."
-        )
+        insights.append(f"Se identifican {negocios_ganados} negocios aprobados o ganados en cotización.")
 
     if negocios_perdidos > 0:
-        insights.append(
-            f"Se identifican {negocios_perdidos} negocios perdidos; conviene revisar estado de cotización, observaciones y acción a seguir."
-        )
+        insights.append(f"Se identifican {negocios_perdidos} negocios perdidos en cotización.")
 
     chart_labels = [row["mes"] for row in monthly_data]
     chart_solicitudes = [row["solicitudes"] for row in monthly_data]
