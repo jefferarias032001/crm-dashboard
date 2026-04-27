@@ -162,7 +162,7 @@
                 <div class="hero-copy">
                     <div class="hero-eyebrow">Business Intelligence Comercial</div>
                     <h1>Dashboard CRM Ejecutivo</h1>
-                    <p>Solicitudes, tiempos de atención, cotizaciones, estados comerciales y valor del negocio.</p>
+                    <p>Solicitudes, cotizaciones, tiempos de respuesta, operación, tendencias semanales y mensuales, estados y valor del negocio.</p>
                 </div>
                 <div class="hero-logo-wrap">
                     <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo empresa" class="hero-logo">
@@ -202,43 +202,43 @@
                 </article>
                 {% endif %}
 
-                {% if data.negocios_ganados > 0 %}
-                <article class="kpi-card kpi-teal">
-                    <span class="kpi-tag">Éxito</span>
-                    <h3>Cotizaciones aprobadas</h3>
-                    <div class="kpi-value">{{ data.negocios_ganados }}</div>
-                </article>
-                {% endif %}
-
-                {% if data.negocios_perdidos > 0 %}
-                <article class="kpi-card kpi-red">
-                    <span class="kpi-tag">Riesgo</span>
-                    <h3>Cotizaciones perdidas</h3>
-                    <div class="kpi-value">{{ data.negocios_perdidos }}</div>
-                </article>
-                {% endif %}
-
-                {% if data.tasa_exito > 0 %}
-                <article class="kpi-card kpi-gold">
-                    <span class="kpi-tag">Resultado</span>
-                    <h3>Tasa de éxito</h3>
-                    <div class="kpi-value">{{ data.tasa_exito }}%</div>
-                </article>
-                {% endif %}
-
                 {% if data.tiempo_respuesta_promedio_horas > 0 %}
                 <article class="kpi-card kpi-cyan">
-                    <span class="kpi-tag">Servicio</span>
+                    <span class="kpi-tag">Solicitud</span>
                     <h3>Resp. prom. solicitud</h3>
                     <div class="kpi-value">{{ data.tiempo_respuesta_promedio_txt }}</div>
                 </article>
                 {% endif %}
 
                 {% if data.tiempo_cierre_promedio_dias > 0 %}
-                <article class="kpi-card kpi-pink">
-                    <span class="kpi-tag">Operación</span>
-                    <h3>Cierre prom. cotización</h3>
+                <article class="kpi-card kpi-teal">
+                    <span class="kpi-tag">Cotización</span>
+                    <h3>Resp. prom. cotización</h3>
                     <div class="kpi-value">{{ data.tiempo_cierre_promedio_txt }}</div>
+                </article>
+                {% endif %}
+
+                {% if data.promedio_espera_operaciones_dias > 0 %}
+                <article class="kpi-card kpi-red">
+                    <span class="kpi-tag">Operaciones</span>
+                    <h3>Espera prom. sin respuesta</h3>
+                    <div class="kpi-value">{{ data.promedio_espera_operaciones_txt }}</div>
+                </article>
+                {% endif %}
+
+                {% if data.pendientes_operaciones_count > 0 %}
+                <article class="kpi-card kpi-gold">
+                    <span class="kpi-tag">Pendientes</span>
+                    <h3>Cotizaciones en operaciones</h3>
+                    <div class="kpi-value">{{ data.pendientes_operaciones_count }}</div>
+                </article>
+                {% endif %}
+
+                {% if data.pendientes_operaciones_criticas > 0 %}
+                <article class="kpi-card kpi-pink">
+                    <span class="kpi-tag">Crítico</span>
+                    <h3>Casos &gt; 3 días</h3>
+                    <div class="kpi-value">{{ data.pendientes_operaciones_criticas }}</div>
                 </article>
                 {% endif %}
 
@@ -261,24 +261,18 @@
                         <span class="pill pill-blue">{{ data.current_period_label }}</span>
                     </div>
                     <div class="mini-grid">
-                        {% if data.current_solicitudes > 0 %}
                         <div class="mini-kpi">
                             <span>Solicitudes</span>
                             <strong>{{ data.current_solicitudes }}</strong>
                         </div>
-                        {% endif %}
-                        {% if data.current_cotizaciones > 0 %}
                         <div class="mini-kpi">
                             <span>Cotizaciones</span>
                             <strong>{{ data.current_cotizaciones }}</strong>
                         </div>
-                        {% endif %}
-                        {% if data.current_tasa_cotizacion > 0 %}
                         <div class="mini-kpi">
                             <span>Tasa</span>
                             <strong>{{ data.current_tasa_cotizacion }}%</strong>
                         </div>
-                        {% endif %}
                     </div>
                 </section>
 
@@ -291,47 +285,51 @@
                         <span class="pill pill-gold">{{ data.previous_period_label }}</span>
                     </div>
                     <div class="mini-grid">
-                        {% if data.previous_solicitudes > 0 %}
                         <div class="mini-kpi">
                             <span>Solicitudes</span>
                             <strong>{{ data.previous_solicitudes }}</strong>
                         </div>
-                        {% endif %}
-                        {% if data.previous_cotizaciones > 0 %}
                         <div class="mini-kpi">
                             <span>Cotizaciones</span>
                             <strong>{{ data.previous_cotizaciones }}</strong>
                         </div>
-                        {% endif %}
-                        {% if data.previous_tasa_cotizacion > 0 %}
                         <div class="mini-kpi">
                             <span>Tasa</span>
                             <strong>{{ data.previous_tasa_cotizacion }}%</strong>
                         </div>
-                        {% endif %}
                     </div>
                 </section>
             </section>
 
             {% if data.trend_summary %}
-            <section class="panel full-panel">
+            <section class="panel">
                 <div class="panel-head">
                     <div>
                         <span class="panel-eyebrow">Performance</span>
-                        <h2>Comportamiento mensual</h2>
+                        <h2>Comportamiento mensual y corte semanal comparable</h2>
                     </div>
                     <span class="pill">Tendencia</span>
                 </div>
                 <div class="trend-grid">
                     <div class="trend-box trend-blue">
-                        <span>Solicitudes</span>
+                        <span>Solicitudes mensual</span>
                         <strong>{{ data.trend_summary.delta_solicitudes }}</strong>
                         <p>{{ data.trend_summary.pct_solicitudes }}% vs {{ data.trend_summary.previous_month }}</p>
                     </div>
                     <div class="trend-box trend-gold">
-                        <span>Cotizaciones</span>
+                        <span>Cotizaciones mensual</span>
                         <strong>{{ data.trend_summary.delta_cotizaciones }}</strong>
                         <p>{{ data.trend_summary.pct_cotizaciones }}% vs {{ data.trend_summary.previous_month }}</p>
+                    </div>
+                    <div class="trend-box trend-purple">
+                        <span>Solicitudes corte semanal</span>
+                        <strong>{{ data.performance_semanal.delta_solicitudes }}</strong>
+                        <p>{{ data.performance_semanal.pct_solicitudes }}% vs mes anterior (mismas semanas)</p>
+                    </div>
+                    <div class="trend-box trend-red">
+                        <span>Cotizaciones corte semanal</span>
+                        <strong>{{ data.performance_semanal.delta_cotizaciones }}</strong>
+                        <p>{{ data.performance_semanal.pct_cotizaciones }}% vs mes anterior (mismas semanas)</p>
                     </div>
                 </div>
             </section>
@@ -341,10 +339,10 @@
                 <section class="panel">
                     <div class="panel-head">
                         <div>
-                            <span class="panel-eyebrow">Tendencia</span>
-                            <h2>Tendencia mensual de solicitudes y cotizaciones</h2>
+                            <span class="panel-eyebrow">Mensual</span>
+                            <h2>Tendencia mensual</h2>
                         </div>
-                        <span class="pill">Líneas</span>
+                        <span class="pill">Mes</span>
                     </div>
                     <div class="chart-box chart-box-lg">
                         <canvas id="monthlyTrendChart"></canvas>
@@ -354,13 +352,13 @@
                 <section class="panel">
                     <div class="panel-head">
                         <div>
-                            <span class="panel-eyebrow">Valor</span>
-                            <h2>Valor del negocio por tipo de operación</h2>
+                            <span class="panel-eyebrow">Semanal</span>
+                            <h2>Tendencia semanal</h2>
                         </div>
-                        <span class="pill">Columnas</span>
+                        <span class="pill">Semana</span>
                     </div>
                     <div class="chart-box chart-box-lg">
-                        <canvas id="operationValueChart"></canvas>
+                        <canvas id="weeklyTrendChart"></canvas>
                     </div>
                 </section>
             </section>
@@ -369,58 +367,99 @@
                 <section class="panel">
                     <div class="panel-head">
                         <div>
-                            <span class="panel-eyebrow">Clientes</span>
-                            <h2>Valor del negocio por cliente</h2>
+                            <span class="panel-eyebrow">Negocio</span>
+                            <h2>Valor por tipo de operación</h2>
                         </div>
-                        <span class="pill">Top clientes</span>
+                        <span class="pill">Valor</span>
+                    </div>
+                    <div class="chart-box chart-box-md">
+                        <canvas id="operationValueChart"></canvas>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Clientes</span>
+                            <h2>Valor por cliente</h2>
+                        </div>
+                        <span class="pill">Top</span>
                     </div>
                     <div class="chart-box chart-box-md">
                         <canvas id="clientValueChart"></canvas>
                     </div>
                 </section>
+            </section>
+
+            <section class="grid-2">
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Seguimiento</span>
+                            <h2>Estado de cotización</h2>
+                        </div>
+                        <span class="pill">Dona</span>
+                    </div>
+                    <div class="chart-box chart-box-md">
+                        <canvas id="estadoCotizacionChart"></canvas>
+                    </div>
+                </section>
 
                 <section class="panel">
                     <div class="panel-head">
                         <div>
-                            <span class="panel-eyebrow">Canales</span>
-                            <h2>Solicitudes por canal</h2>
+                            <span class="panel-eyebrow">Operaciones</span>
+                            <h2>Aging pendientes en operaciones</h2>
                         </div>
-                        <span class="pill">Origen</span>
+                        <span class="pill">Aging</span>
                     </div>
                     <div class="chart-box chart-box-md">
-                        <canvas id="channelChart"></canvas>
+                        <canvas id="agingOperacionesChart"></canvas>
                     </div>
                 </section>
             </section>
 
             <section class="grid-2">
+                <section class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Origen</span>
+                            <h2>Solicitudes por canal</h2>
+                        </div>
+                        <span class="pill">Canales</span>
+                    </div>
+                    <div class="chart-box chart-box-md">
+                        <canvas id="channelChart"></canvas>
+                    </div>
+                </section>
+
                 <section class="panel">
                     <div class="panel-head">
                         <div>
                             <span class="panel-eyebrow">Segmentación</span>
                             <h2>Distribución por tipo de cliente</h2>
                         </div>
-                        <span class="pill">Dona</span>
+                        <span class="pill">Cliente</span>
                     </div>
                     <div class="chart-box chart-box-md">
                         <canvas id="clientTypeChart"></canvas>
                     </div>
                 </section>
+            </section>
 
-                <section class="panel panel-insight">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Insights</span>
-                            <h2>Titulares ejecutivos</h2>
-                        </div>
-                        <span class="pill">Resumen</span>
+            <section class="panel panel-insight">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Insights</span>
+                        <h2>Titulares ejecutivos</h2>
                     </div>
-                    <ul class="insight-list">
-                        {% for item in data.insights %}
-                        <li>{{ item }}</li>
-                        {% endfor %}
-                    </ul>
-                </section>
+                    <span class="pill">Resumen</span>
+                </div>
+                <ul class="insight-list">
+                    {% for item in data.insights %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
             </section>
 
             <section class="grid-2">
@@ -564,6 +603,9 @@
                                     <th>Cantidad</th>
                                     <th>Valor estimado</th>
                                     <th>% participación</th>
+                                    <th>Resp. solicitud</th>
+                                    <th>Resp. cotización</th>
+                                    <th>Espera operaciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -576,6 +618,9 @@
                                     <td>{{ row.cantidad }}</td>
                                     <td>{{ row.valor_total | currency }}</td>
                                     <td>{{ row.porcentaje_participacion }}%</td>
+                                    <td>{% if row.tiempo_respuesta_solicitud == row.tiempo_respuesta_solicitud %}{{ row.tiempo_respuesta_solicitud }} h{% endif %}</td>
+                                    <td>{% if row.tiempo_respuesta_cotizacion == row.tiempo_respuesta_cotizacion %}{{ row.tiempo_respuesta_cotizacion }} días{% endif %}</td>
+                                    <td>{% if row.espera_operaciones == row.espera_operaciones %}{{ row.espera_operaciones }} días{% endif %}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -585,6 +630,9 @@
                                     <td>{{ ns.cantidad }}</td>
                                     <td>{{ ns.valor | currency }}</td>
                                     <td>100%</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -712,14 +760,28 @@
         const monthlyLabels = {{ data.chart_labels_json | safe }};
         const monthlySolicitudes = {{ data.chart_solicitudes_json | safe }};
         const monthlyCotizaciones = {{ data.chart_cotizaciones_json | safe }};
+
+        const weeklyLabels = {{ data.chart_weekly_labels_json | safe }};
+        const weeklySolicitudes = {{ data.chart_weekly_solicitudes_json | safe }};
+        const weeklyCotizaciones = {{ data.chart_weekly_cotizaciones_json | safe }};
+
         const operationLabels = {{ data.chart_tipo_operacion_labels_json | safe }};
         const operationValues = {{ data.chart_tipo_operacion_valores_json | safe }};
+
         const clientLabels = {{ data.chart_cliente_labels_json | safe }};
         const clientValues = {{ data.chart_cliente_valores_json | safe }};
+
         const channelLabels = {{ data.chart_canal_labels_json | safe }};
         const channelValues = {{ data.chart_canal_valores_json | safe }};
+
         const clientTypeLabels = {{ data.chart_tipo_cliente_labels_json | safe }};
         const clientTypeValues = {{ data.chart_tipo_cliente_valores_json | safe }};
+
+        const estadoCotLabels = {{ data.chart_estado_cot_labels_json | safe }};
+        const estadoCotValues = {{ data.chart_estado_cot_valores_json | safe }};
+
+        const agingLabels = {{ data.chart_aging_labels_json | safe }};
+        const agingValues = {{ data.chart_aging_valores_json | safe }};
 
         const moneyFormat = (value) => {
             try {
@@ -743,7 +805,7 @@
                         label: 'Solicitudes',
                         data: monthlySolicitudes,
                         borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37,99,235,0.18)',
+                        backgroundColor: 'rgba(37,99,235,0.15)',
                         tension: 0.35,
                         fill: true,
                         pointRadius: 4,
@@ -768,28 +830,46 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 14 } },
                 plugins: {
-                    legend: {
-                        labels: { color: '#334155', font: { weight: '700' } }
-                    },
-                    datalabels: {
-                        ...commonLabelStyle,
-                        anchor: 'end',
-                        align: 'top',
-                        formatter: (value) => value > 0 ? value : ''
-                    }
+                    legend: { labels: { color: '#334155', font: { weight: '700' } } },
+                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'top', formatter: (v) => v > 0 ? v : '' }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: '#64748b', precision: 0 },
-                        grid: { color: 'rgba(148,163,184,0.16)' }
+                    y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
+                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('weeklyTrendChart'), {
+            type: 'bar',
+            data: {
+                labels: weeklyLabels,
+                datasets: [
+                    {
+                        label: 'Solicitudes',
+                        data: weeklySolicitudes,
+                        backgroundColor: '#2563eb',
+                        borderRadius: 8
                     },
-                    x: {
-                        ticks: { color: '#64748b' },
-                        grid: { display: false }
+                    {
+                        label: 'Cotizaciones',
+                        data: weeklyCotizaciones,
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 8
                     }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#334155', font: { weight: '700' } } },
+                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'end', formatter: (v) => v > 0 ? v : '' }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
+                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
                 }
             }
         });
@@ -809,34 +889,17 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 18 } },
                 plugins: {
                     legend: { display: false },
-                    datalabels: {
-                        ...commonLabelStyle,
-                        anchor: 'end',
-                        align: 'end',
-                        formatter: (value) => value > 0 ? moneyFormat(value) : ''
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => moneyFormat(context.raw)
-                        }
-                    }
+                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'end', formatter: (v) => v > 0 ? moneyFormat(v) : '' }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            color: '#64748b',
-                            callback: (value) => moneyFormat(value)
-                        },
+                        ticks: { color: '#64748b', callback: (v) => moneyFormat(v) },
                         grid: { color: 'rgba(148,163,184,0.16)' }
                     },
-                    x: {
-                        ticks: { color: '#64748b' },
-                        grid: { display: false }
-                    }
+                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
                 }
             }
         });
@@ -859,31 +922,15 @@
                 indexAxis: 'y',
                 plugins: {
                     legend: { display: false },
-                    datalabels: {
-                        ...commonLabelStyle,
-                        anchor: 'end',
-                        align: 'right',
-                        formatter: (value) => value > 0 ? moneyFormat(value) : ''
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => moneyFormat(context.raw)
-                        }
-                    }
+                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'right', formatter: (v) => v > 0 ? moneyFormat(v) : '' }
                 },
                 scales: {
                     x: {
                         beginAtZero: true,
-                        ticks: {
-                            color: '#64748b',
-                            callback: (value) => moneyFormat(value)
-                        },
+                        ticks: { color: '#64748b', callback: (v) => moneyFormat(v) },
                         grid: { color: 'rgba(148,163,184,0.16)' }
                     },
-                    y: {
-                        ticks: { color: '#64748b' },
-                        grid: { display: false }
-                    }
+                    y: { ticks: { color: '#64748b' }, grid: { display: false } }
                 }
             }
         });
@@ -903,26 +950,13 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 14 } },
                 plugins: {
                     legend: { display: false },
-                    datalabels: {
-                        ...commonLabelStyle,
-                        anchor: 'end',
-                        align: 'end',
-                        formatter: (value) => value > 0 ? value : ''
-                    }
+                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'end', formatter: (v) => v > 0 ? v : '' }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: '#64748b', precision: 0 },
-                        grid: { color: 'rgba(148,163,184,0.16)' }
-                    },
-                    x: {
-                        ticks: { color: '#64748b' },
-                        grid: { display: false }
-                    }
+                    y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
+                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
                 }
             }
         });
@@ -942,14 +976,55 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { color: '#334155', font: { weight: '700' } }
-                    },
-                    datalabels: {
-                        ...commonLabelStyle,
-                        formatter: (value) => value > 0 ? value : ''
-                    }
+                    legend: { position: 'bottom', labels: { color: '#334155', font: { weight: '700' } } },
+                    datalabels: { ...commonLabelStyle, formatter: (v) => v > 0 ? v : '' }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('estadoCotizacionChart'), {
+            type: 'doughnut',
+            data: {
+                labels: estadoCotLabels,
+                datasets: [{
+                    data: estadoCotValues,
+                    backgroundColor: ['#16a34a', '#2563eb', '#f59e0b', '#ef4444', '#7c3aed'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#334155', font: { weight: '700' } } },
+                    datalabels: { ...commonLabelStyle, formatter: (v) => v > 0 ? v : '' }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('agingOperacionesChart'), {
+            type: 'bar',
+            data: {
+                labels: agingLabels,
+                datasets: [{
+                    label: 'Pendientes',
+                    data: agingValues,
+                    backgroundColor: ['#22c55e', '#facc15', '#fb923c', '#ef4444'],
+                    borderRadius: 10,
+                    maxBarThickness: 58
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'end', formatter: (v) => v > 0 ? v : '' }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
+                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
                 }
             }
         });

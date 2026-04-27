@@ -37,9 +37,7 @@ body {
     color: var(--text-main);
 }
 
-/* =========================
-   TEMA A · CORPORATIVO OSCURO
-   ========================= */
+/* Tema A */
 body.theme-A {
     background:
         radial-gradient(circle at top left, rgba(37,99,235,0.18), transparent 22%),
@@ -47,9 +45,7 @@ body.theme-A {
         linear-gradient(135deg, #08182f 0%, #0b2343 48%, #123b69 100%);
 }
 
-/* =========================
-   TEMA B · PREMIUM CLARO
-   ========================= */
+/* Tema B */
 body.theme-B {
     background:
         radial-gradient(circle at top left, rgba(37,99,235,0.08), transparent 20%),
@@ -57,16 +53,12 @@ body.theme-B {
         linear-gradient(180deg, #eef5ff 0%, #f8fbff 55%, #edf4fb 100%);
 }
 
-/* Layout */
 .app-shell {
     display: grid;
     grid-template-columns: 290px 1fr;
     min-height: 100vh;
 }
 
-/* =========================
-   SIDEBAR
-   ========================= */
 .sidebar {
     padding: 18px 14px;
     position: sticky;
@@ -76,7 +68,7 @@ body.theme-B {
 }
 
 body.theme-A .sidebar {
-    background: linear-gradient(180deg, rgba(4, 14, 28, 0.98), rgba(8, 28, 52, 0.98));
+    background: linear-gradient(180deg, rgba(4,14,28,0.98), rgba(8,28,52,0.98));
     border-right: 1px solid rgba(255,255,255,0.08);
 }
 
@@ -123,6 +115,12 @@ body.theme-B .brand-logo-wrap {
     object-fit: contain;
 }
 
+.brand-copy h2 {
+    font-size: 17px;
+    margin-bottom: 2px;
+    font-weight: 800;
+}
+
 body.theme-A .brand-copy h2 {
     color: #ffffff;
 }
@@ -131,10 +129,8 @@ body.theme-B .brand-copy h2 {
     color: #0f172a;
 }
 
-.brand-copy h2 {
-    font-size: 17px;
-    margin-bottom: 2px;
-    font-weight: 800;
+.brand-copy p {
+    font-size: 11px;
 }
 
 body.theme-A .brand-copy p {
@@ -143,10 +139,6 @@ body.theme-A .brand-copy p {
 
 body.theme-B .brand-copy p {
     color: #64748b;
-}
-
-.brand-copy p {
-    font-size: 11px;
 }
 
 .filters-card,
@@ -316,9 +308,6 @@ body.theme-B .sidebar-card strong {
     font-weight: 800;
 }
 
-/* =========================
-   MAIN
-   ========================= */
 .main-content {
     padding: 18px;
     max-width: 1680px;
@@ -405,9 +394,6 @@ body.theme-B .hero-logo-wrap {
     object-fit: contain;
 }
 
-/* =========================
-   KPI
-   ========================= */
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
@@ -484,9 +470,6 @@ body.theme-B .hero-logo-wrap {
 .kpi-pink { background: linear-gradient(135deg, #c026d3, var(--pink)); }
 .kpi-dark { background: linear-gradient(135deg, var(--dark), var(--dark-2)); }
 
-/* =========================
-   PANELS
-   ========================= */
 .grid-2 {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -692,9 +675,6 @@ body.theme-B .trend-box {
     font-size: 11px;
 }
 
-/* =========================
-   CHARTS
-   ========================= */
 .chart-box {
     position: relative;
     width: 100%;
@@ -720,9 +700,6 @@ body.theme-B .chart-box {
     height: 280px;
 }
 
-/* =========================
-   INSIGHTS
-   ========================= */
 .insight-list {
     list-style: none;
     padding-left: 0;
@@ -748,9 +725,6 @@ body.theme-B .chart-box {
     left: 0;
 }
 
-/* =========================
-   TABLES
-   ========================= */
 .table-wrap {
     width: 100%;
     overflow-x: auto;
@@ -826,9 +800,6 @@ body.theme-B tfoot .total-row td {
     background: #e2e8f0;
 }
 
-/* =========================
-   ERROR
-   ========================= */
 .error-box {
     background: linear-gradient(135deg, #fff1f2, #ffe4e6);
     color: #9f1239;
@@ -845,9 +816,6 @@ body.theme-B tfoot .total-row td {
     font-weight: 900;
 }
 
-/* =========================
-   RESPONSIVE
-   ========================= */
 @media (max-width: 1500px) {
     .kpi-grid {
         grid-template-columns: repeat(4, minmax(160px, 1fr));
@@ -871,7 +839,7 @@ body.theme-B tfoot .total-row td {
 
     body.theme-B .sidebar {
         border-right: none;
-        border-bottom: 1px solid #dce8f5;
+        border-bottom: 1px solid #dce8f7;
     }
 
     .grid-2,
