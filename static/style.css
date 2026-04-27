@@ -37,7 +37,6 @@ body {
     color: var(--text-main);
 }
 
-/* Tema A */
 body.theme-A {
     background:
         radial-gradient(circle at top left, rgba(37,99,235,0.18), transparent 22%),
@@ -45,7 +44,6 @@ body.theme-A {
         linear-gradient(135deg, #08182f 0%, #0b2343 48%, #123b69 100%);
 }
 
-/* Tema B */
 body.theme-B {
     background:
         radial-gradient(circle at top left, rgba(37,99,235,0.08), transparent 20%),
@@ -398,7 +396,7 @@ body.theme-B .hero-logo-wrap {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
     gap: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
 }
 
 .kpi-card {
@@ -457,7 +455,11 @@ body.theme-B .hero-logo-wrap {
     font-size: 24px;
     font-weight: 900;
     line-height: 1.05;
-    word-break: break-word;
+    word-break: normal;
+}
+
+.kpi-dark .kpi-value {
+    font-size: 22px;
 }
 
 .kpi-blue { background: linear-gradient(135deg, var(--blue-2), var(--blue)); }
@@ -626,6 +628,38 @@ body.theme-B .mini-kpi {
     color: var(--text-main);
 }
 
+.panel-compact {
+    padding: 12px 14px;
+    margin-bottom: 14px;
+}
+
+.panel-compact .panel-head {
+    margin-bottom: 8px;
+}
+
+.panel-compact .panel-head h2 {
+    font-size: 15px;
+}
+
+.panel-compact .trend-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.panel-compact .trend-box {
+    min-height: 78px;
+    padding: 10px 12px;
+}
+
+.panel-compact .trend-box strong {
+    font-size: 21px;
+    margin-bottom: 2px;
+}
+
+.panel-compact .trend-box p {
+    font-size: 10px;
+}
+
 .trend-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -652,6 +686,14 @@ body.theme-B .trend-box {
 
 .trend-gold {
     background: linear-gradient(135deg, #fff8ef, #fff2da);
+}
+
+.trend-purple {
+    background: linear-gradient(135deg, #f5f3ff, #efe9ff);
+}
+
+.trend-red {
+    background: linear-gradient(135deg, #fff1f2, #ffe4e6);
 }
 
 .trend-box span {
@@ -820,6 +862,10 @@ body.theme-B tfoot .total-row td {
     .kpi-grid {
         grid-template-columns: repeat(4, minmax(160px, 1fr));
     }
+
+    .panel-compact .trend-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 1250px) {
@@ -845,6 +891,10 @@ body.theme-B tfoot .total-row td {
     .grid-2,
     .trend-grid {
         grid-template-columns: 1fr;
+    }
+
+    .panel-compact .trend-grid {
+        grid-template-columns: 1fr 1fr;
     }
 
     .main-content {
@@ -877,7 +927,8 @@ body.theme-B tfoot .total-row td {
 }
 
 @media (max-width: 560px) {
-    .kpi-grid {
+    .kpi-grid,
+    .panel-compact .trend-grid {
         grid-template-columns: 1fr;
     }
 

@@ -8,653 +8,550 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
+
 <body class="theme-{{ theme }}">
-    <div class="app-shell">
-        <aside class="sidebar">
-            <div class="sidebar-top">
-                <div class="brand">
-                    <div class="brand-logo-wrap">
-                        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo empresa" class="brand-logo">
-                    </div>
-                    <div class="brand-copy">
-                        <h2>Dashboard CRM</h2>
-                        <p>Vista ejecutiva comercial</p>
-                    </div>
+<div class="app-shell">
+
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <div class="brand">
+                <div class="brand-logo-wrap">
+                    <img src="{{ url_for('static', filename='logo.png') }}" class="brand-logo">
+                </div>
+                <div class="brand-copy">
+                    <h2>Dashboard CRM</h2>
+                    <p>Vista ejecutiva comercial</p>
                 </div>
             </div>
+        </div>
 
-            <form method="get" class="filters-card">
-                <div class="filters-header">
-                    <h3>Filtros</h3>
-                    <a class="clear-link" href="/?theme={{ theme }}">Limpiar</a>
-                </div>
-
-                <div class="filter-group">
-                    <label>Tema visual</label>
-                    <select name="theme">
-                        <option value="A" {% if theme == "A" %}selected{% endif %}>A · Corporativo oscuro</option>
-                        <option value="B" {% if theme == "B" %}selected{% endif %}>B · Premium claro</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Mes</label>
-                    <select name="mes">
-                        <option value="">Todos</option>
-                        {% for item in filter_options.mes %}
-                        <option value="{{ item }}" {% if filters.mes == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Canal</label>
-                    <select name="canal">
-                        <option value="">Todos</option>
-                        {% for item in filter_options.canal %}
-                        <option value="{{ item }}" {% if filters.canal == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Tipo de cliente</label>
-                    <select name="tipo_cliente">
-                        <option value="">Todos</option>
-                        {% for item in filter_options.tipo_cliente %}
-                        <option value="{{ item }}" {% if filters.tipo_cliente == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Tipo de solicitud</label>
-                    <select name="tipo_solicitud">
-                        <option value="">Todos</option>
-                        {% for item in filter_options.tipo_solicitud %}
-                        <option value="{{ item }}" {% if filters.tipo_solicitud == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Tipo de operación</label>
-                    <select name="tipo_operacion">
-                        <option value="">Todos</option>
-                        {% for item in filter_options.tipo_operacion %}
-                        <option value="{{ item }}" {% if filters.tipo_operacion == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Estado</label>
-                    <select name="estado">
-                        <option value="">Todos</option>
-                        {% for item in filter_options.estado %}
-                        <option value="{{ item }}" {% if filters.estado == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Estado cotización</label>
-                    <select name="estado_cotizacion">
-                        <option value="">Todos</option>
-                        {% for item in filter_options.estado_cotizacion %}
-                        <option value="{{ item }}" {% if filters.estado_cotizacion == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Responsable</label>
-                    <select name="responsable_cotizacion">
-                        <option value="">Todos</option>
-                        {% for item in filter_options.responsable_cotizacion %}
-                        <option value="{{ item }}" {% if filters.responsable_cotizacion == item %}selected{% endif %}>{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <button class="btn-filter" type="submit">Aplicar filtros</button>
-
-                <a
-                    class="btn-export"
-                    href="{{ url_for('exportar_excel',
-                        theme=theme,
-                        mes=filters.mes,
-                        canal=filters.canal,
-                        tipo_cliente=filters.tipo_cliente,
-                        tipo_solicitud=filters.tipo_solicitud,
-                        tipo_operacion=filters.tipo_operacion,
-                        estado=filters.estado,
-                        estado_cotizacion=filters.estado_cotizacion,
-                        responsable_cotizacion=filters.responsable_cotizacion
-                    ) }}"
-                >
-                    Exportar Excel
-                </a>
-            </form>
-
-            {% if data %}
-            <div class="sidebar-stats">
-                <div class="sidebar-card">
-                    <span class="sidebar-label">Última actualización</span>
-                    <strong>{{ data.generated_at }}</strong>
-                </div>
-
-                <div class="sidebar-card">
-                    <span class="sidebar-label">Período actual</span>
-                    <strong>{{ data.current_period_label }}</strong>
-                </div>
-
-                <div class="sidebar-card">
-                    <span class="sidebar-label">Período anterior</span>
-                    <strong>{{ data.previous_period_label }}</strong>
-                </div>
+        <form method="get" class="filters-card">
+            <div class="filters-header">
+                <h3>Filtros</h3>
+                <a class="clear-link" href="/?theme={{ theme }}">Limpiar</a>
             </div>
+
+            <div class="filter-group">
+                <label>Tema visual</label>
+                <select name="theme">
+                    <option value="A" {% if theme == "A" %}selected{% endif %}>A · Corporativo oscuro</option>
+                    <option value="B" {% if theme == "B" %}selected{% endif %}>B · Premium claro</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Mes</label>
+                <select name="mes">
+                    <option value="">Todos</option>
+                    {% for item in filter_options.mes %}
+                    <option value="{{ item }}" {% if filters.mes == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Canal</label>
+                <select name="canal">
+                    <option value="">Todos</option>
+                    {% for item in filter_options.canal %}
+                    <option value="{{ item }}" {% if filters.canal == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Tipo de cliente</label>
+                <select name="tipo_cliente">
+                    <option value="">Todos</option>
+                    {% for item in filter_options.tipo_cliente %}
+                    <option value="{{ item }}" {% if filters.tipo_cliente == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Tipo de solicitud</label>
+                <select name="tipo_solicitud">
+                    <option value="">Todos</option>
+                    {% for item in filter_options.tipo_solicitud %}
+                    <option value="{{ item }}" {% if filters.tipo_solicitud == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Tipo de operación</label>
+                <select name="tipo_operacion">
+                    <option value="">Todos</option>
+                    {% for item in filter_options.tipo_operacion %}
+                    <option value="{{ item }}" {% if filters.tipo_operacion == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Estado</label>
+                <select name="estado">
+                    <option value="">Todos</option>
+                    {% for item in filter_options.estado %}
+                    <option value="{{ item }}" {% if filters.estado == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Estado cotización</label>
+                <select name="estado_cotizacion">
+                    <option value="">Todos</option>
+                    {% for item in filter_options.estado_cotizacion %}
+                    <option value="{{ item }}" {% if filters.estado_cotizacion == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Responsable</label>
+                <select name="responsable_cotizacion">
+                    <option value="">Todos</option>
+                    {% for item in filter_options.responsable_cotizacion %}
+                    <option value="{{ item }}" {% if filters.responsable_cotizacion == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button class="btn-filter" type="submit">Aplicar filtros</button>
+
+            <a class="btn-export"
+               href="{{ url_for('exportar_excel',
+                    theme=theme,
+                    mes=filters.mes,
+                    canal=filters.canal,
+                    tipo_cliente=filters.tipo_cliente,
+                    tipo_solicitud=filters.tipo_solicitud,
+                    tipo_operacion=filters.tipo_operacion,
+                    estado=filters.estado,
+                    estado_cotizacion=filters.estado_cotizacion,
+                    responsable_cotizacion=filters.responsable_cotizacion
+               ) }}">
+                Exportar Excel
+            </a>
+        </form>
+
+        {% if data %}
+        <div class="sidebar-stats">
+            <div class="sidebar-card">
+                <span class="sidebar-label">Última actualización</span>
+                <strong>{{ data.generated_at }}</strong>
+            </div>
+
+            <div class="sidebar-card">
+                <span class="sidebar-label">Período actual</span>
+                <strong>{{ data.current_period_label }}</strong>
+            </div>
+
+            <div class="sidebar-card">
+                <span class="sidebar-label">Período anterior</span>
+                <strong>{{ data.previous_period_label }}</strong>
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+
+    <main class="main-content">
+        <header class="hero-panel">
+            <div class="hero-copy">
+                <div class="hero-eyebrow">Business Intelligence Comercial</div>
+                <h1>Dashboard CRM Ejecutivo</h1>
+                <p>Solicitudes, cotizaciones, tiempos de respuesta, operación, tendencias semanales y mensuales, estados y valor del negocio.</p>
+            </div>
+            <div class="hero-logo-wrap">
+                <img src="{{ url_for('static', filename='logo.png') }}" class="hero-logo">
+            </div>
+        </header>
+
+        {% if error %}
+        <div class="error-box">
+            <h2>Error</h2>
+            <p>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        {% if data %}
+
+        <section class="kpi-grid">
+            <article class="kpi-card kpi-blue">
+                <span class="kpi-tag">Volumen</span>
+                <h3>Solicitudes</h3>
+                <div class="kpi-value">{{ data.total_solicitudes }}</div>
+            </article>
+
+            <article class="kpi-card kpi-purple">
+                <span class="kpi-tag">Pipeline</span>
+                <h3>Cotizaciones</h3>
+                <div class="kpi-value">{{ data.total_cotizaciones }}</div>
+            </article>
+
+            <article class="kpi-card kpi-green">
+                <span class="kpi-tag">Conversión</span>
+                <h3>Tasa de cotización</h3>
+                <div class="kpi-value">{{ data.tasa_cotizacion }}%</div>
+            </article>
+
+            {% if data.tiempo_respuesta_promedio_horas > 0 %}
+            <article class="kpi-card kpi-cyan">
+                <span class="kpi-tag">Solicitud</span>
+                <h3>Resp. prom. solicitud</h3>
+                <div class="kpi-value">{{ data.tiempo_respuesta_promedio_txt }}</div>
+            </article>
             {% endif %}
-        </aside>
 
-        <main class="main-content">
-            <header class="hero-panel">
-                <div class="hero-copy">
-                    <div class="hero-eyebrow">Business Intelligence Comercial</div>
-                    <h1>Dashboard CRM Ejecutivo</h1>
-                    <p>Solicitudes, cotizaciones, tiempos de respuesta, operación, tendencias semanales y mensuales, estados y valor del negocio.</p>
-                </div>
-                <div class="hero-logo-wrap">
-                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo empresa" class="hero-logo">
-                </div>
-            </header>
-
-            {% if error %}
-            <div class="error-box">
-                <h2>Error</h2>
-                <p>{{ error }}</p>
-            </div>
+            {% if data.tiempo_cierre_promedio_dias > 0 %}
+            <article class="kpi-card kpi-teal">
+                <span class="kpi-tag">Cotización</span>
+                <h3>Resp. prom. cotización</h3>
+                <div class="kpi-value">{{ data.tiempo_cierre_promedio_txt }}</div>
+            </article>
             {% endif %}
 
-            {% if data %}
-            <section class="kpi-grid">
-                {% if data.total_solicitudes > 0 %}
-                <article class="kpi-card kpi-blue">
-                    <span class="kpi-tag">Volumen</span>
-                    <h3>Solicitudes</h3>
-                    <div class="kpi-value">{{ data.total_solicitudes }}</div>
-                </article>
-                {% endif %}
+            {% if data.promedio_espera_operaciones_dias > 0 %}
+            <article class="kpi-card kpi-red">
+                <span class="kpi-tag">Operaciones</span>
+                <h3>Tiempo prom. en operaciones</h3>
+                <div class="kpi-value">{{ data.promedio_espera_operaciones_txt }}</div>
+            </article>
+            {% endif %}
 
-                {% if data.total_cotizaciones > 0 %}
-                <article class="kpi-card kpi-purple">
-                    <span class="kpi-tag">Pipeline</span>
-                    <h3>Cotizaciones</h3>
-                    <div class="kpi-value">{{ data.total_cotizaciones }}</div>
-                </article>
-                {% endif %}
+            {% if data.pendientes_operaciones_count > 0 %}
+            <article class="kpi-card kpi-gold">
+                <span class="kpi-tag">Pendientes</span>
+                <h3>Cotizaciones en operaciones</h3>
+                <div class="kpi-value">{{ data.pendientes_operaciones_count }}</div>
+            </article>
+            {% endif %}
 
-                {% if data.tasa_cotizacion > 0 %}
-                <article class="kpi-card kpi-green">
-                    <span class="kpi-tag">Conversión</span>
-                    <h3>Tasa de cotización</h3>
-                    <div class="kpi-value">{{ data.tasa_cotizacion }}%</div>
-                </article>
-                {% endif %}
+            {% if data.pendientes_operaciones_criticas > 0 %}
+            <article class="kpi-card kpi-pink">
+                <span class="kpi-tag">Crítico</span>
+                <h3>Casos &gt; 3 días</h3>
+                <div class="kpi-value">{{ data.pendientes_operaciones_criticas }}</div>
+            </article>
+            {% endif %}
 
-                {% if data.tiempo_respuesta_promedio_horas > 0 %}
-                <article class="kpi-card kpi-cyan">
-                    <span class="kpi-tag">Solicitud</span>
-                    <h3>Resp. prom. solicitud</h3>
-                    <div class="kpi-value">{{ data.tiempo_respuesta_promedio_txt }}</div>
-                </article>
-                {% endif %}
+            <article class="kpi-card kpi-dark">
+                <span class="kpi-tag">Negocio</span>
+                <h3>Valor estimado</h3>
+                <div class="kpi-value">${{ "%.2f"|format(data.valor_total_b) }} B</div>
+            </article>
+        </section>
 
-                {% if data.tiempo_cierre_promedio_dias > 0 %}
-                <article class="kpi-card kpi-teal">
-                    <span class="kpi-tag">Cotización</span>
-                    <h3>Resp. prom. cotización</h3>
-                    <div class="kpi-value">{{ data.tiempo_cierre_promedio_txt }}</div>
-                </article>
-                {% endif %}
-
-                {% if data.promedio_espera_operaciones_dias > 0 %}
-                <article class="kpi-card kpi-red">
-                    <span class="kpi-tag">Operaciones</span>
-                    <h3>Espera prom. sin respuesta</h3>
-                    <div class="kpi-value">{{ data.promedio_espera_operaciones_txt }}</div>
-                </article>
-                {% endif %}
-
-                {% if data.pendientes_operaciones_count > 0 %}
-                <article class="kpi-card kpi-gold">
-                    <span class="kpi-tag">Pendientes</span>
-                    <h3>Cotizaciones en operaciones</h3>
-                    <div class="kpi-value">{{ data.pendientes_operaciones_count }}</div>
-                </article>
-                {% endif %}
-
-                {% if data.pendientes_operaciones_criticas > 0 %}
-                <article class="kpi-card kpi-pink">
-                    <span class="kpi-tag">Crítico</span>
-                    <h3>Casos &gt; 3 días</h3>
-                    <div class="kpi-value">{{ data.pendientes_operaciones_criticas }}</div>
-                </article>
-                {% endif %}
-
-                {% if data.valor_total > 0 %}
-                <article class="kpi-card kpi-dark">
-                    <span class="kpi-tag">Negocio</span>
-                    <h3>Valor estimado del negocio</h3>
-                    <div class="kpi-value">{{ data.valor_total | currency }}</div>
-                </article>
-                {% endif %}
+        <section class="grid-2">
+            <section class="panel panel-accent-blue">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Período</span>
+                        <h2>Resumen actual</h2>
+                    </div>
+                    <span class="pill pill-blue">{{ data.current_period_label }}</span>
+                </div>
+                <div class="mini-grid">
+                    <div class="mini-kpi">
+                        <span>Solicitudes</span>
+                        <strong>{{ data.current_solicitudes }}</strong>
+                    </div>
+                    <div class="mini-kpi">
+                        <span>Cotizaciones</span>
+                        <strong>{{ data.current_cotizaciones }}</strong>
+                    </div>
+                    <div class="mini-kpi">
+                        <span>Tasa</span>
+                        <strong>{{ data.current_tasa_cotizacion }}%</strong>
+                    </div>
+                </div>
             </section>
 
-            <section class="grid-2">
-                <section class="panel panel-accent-blue">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Período</span>
-                            <h2>Resumen actual</h2>
-                        </div>
-                        <span class="pill pill-blue">{{ data.current_period_label }}</span>
+            <section class="panel panel-accent-gold">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Período</span>
+                        <h2>Resumen anterior</h2>
                     </div>
-                    <div class="mini-grid">
-                        <div class="mini-kpi">
-                            <span>Solicitudes</span>
-                            <strong>{{ data.current_solicitudes }}</strong>
-                        </div>
-                        <div class="mini-kpi">
-                            <span>Cotizaciones</span>
-                            <strong>{{ data.current_cotizaciones }}</strong>
-                        </div>
-                        <div class="mini-kpi">
-                            <span>Tasa</span>
-                            <strong>{{ data.current_tasa_cotizacion }}%</strong>
-                        </div>
+                    <span class="pill pill-gold">{{ data.previous_period_label }}</span>
+                </div>
+                <div class="mini-grid">
+                    <div class="mini-kpi">
+                        <span>Solicitudes</span>
+                        <strong>{{ data.previous_solicitudes }}</strong>
                     </div>
-                </section>
-
-                <section class="panel panel-accent-gold">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Período</span>
-                            <h2>Resumen anterior</h2>
-                        </div>
-                        <span class="pill pill-gold">{{ data.previous_period_label }}</span>
+                    <div class="mini-kpi">
+                        <span>Cotizaciones</span>
+                        <strong>{{ data.previous_cotizaciones }}</strong>
                     </div>
-                    <div class="mini-grid">
-                        <div class="mini-kpi">
-                            <span>Solicitudes</span>
-                            <strong>{{ data.previous_solicitudes }}</strong>
-                        </div>
-                        <div class="mini-kpi">
-                            <span>Cotizaciones</span>
-                            <strong>{{ data.previous_cotizaciones }}</strong>
-                        </div>
-                        <div class="mini-kpi">
-                            <span>Tasa</span>
-                            <strong>{{ data.previous_tasa_cotizacion }}%</strong>
-                        </div>
+                    <div class="mini-kpi">
+                        <span>Tasa</span>
+                        <strong>{{ data.previous_tasa_cotizacion }}%</strong>
                     </div>
-                </section>
+                </div>
             </section>
+        </section>
 
-            {% if data.trend_summary %}
+        {% if data.trend_summary %}
+        <section class="panel panel-compact">
+            <div class="panel-head compact-head">
+                <div>
+                    <span class="panel-eyebrow">Performance</span>
+                    <h2>Comportamiento mensual y corte semanal comparable</h2>
+                </div>
+                <span class="pill">Tendencia</span>
+            </div>
+
+            <div class="trend-grid">
+                <div class="trend-box trend-blue">
+                    <span>Solicitudes mensual</span>
+                    <strong>{{ data.trend_summary.delta_solicitudes }}</strong>
+                    <p>{{ data.trend_summary.pct_solicitudes }}% vs {{ data.trend_summary.previous_month }}</p>
+                </div>
+
+                <div class="trend-box trend-gold">
+                    <span>Cotizaciones mensual</span>
+                    <strong>{{ data.trend_summary.delta_cotizaciones }}</strong>
+                    <p>{{ data.trend_summary.pct_cotizaciones }}% vs {{ data.trend_summary.previous_month }}</p>
+                </div>
+
+                <div class="trend-box trend-purple">
+                    <span>Solicitudes corte semanal</span>
+                    <strong>{{ data.performance_semanal.delta_solicitudes }}</strong>
+                    <p>{{ data.performance_semanal.pct_solicitudes }}% vs mes anterior</p>
+                </div>
+
+                <div class="trend-box trend-red">
+                    <span>Cotizaciones corte semanal</span>
+                    <strong>{{ data.performance_semanal.delta_cotizaciones }}</strong>
+                    <p>{{ data.performance_semanal.pct_cotizaciones }}% vs mes anterior</p>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="grid-2">
             <section class="panel">
                 <div class="panel-head">
                     <div>
-                        <span class="panel-eyebrow">Performance</span>
-                        <h2>Comportamiento mensual y corte semanal comparable</h2>
+                        <span class="panel-eyebrow">Mensual</span>
+                        <h2>Tendencia mensual</h2>
                     </div>
-                    <span class="pill">Tendencia</span>
+                    <span class="pill">Mes</span>
                 </div>
-                <div class="trend-grid">
-                    <div class="trend-box trend-blue">
-                        <span>Solicitudes mensual</span>
-                        <strong>{{ data.trend_summary.delta_solicitudes }}</strong>
-                        <p>{{ data.trend_summary.pct_solicitudes }}% vs {{ data.trend_summary.previous_month }}</p>
-                    </div>
-                    <div class="trend-box trend-gold">
-                        <span>Cotizaciones mensual</span>
-                        <strong>{{ data.trend_summary.delta_cotizaciones }}</strong>
-                        <p>{{ data.trend_summary.pct_cotizaciones }}% vs {{ data.trend_summary.previous_month }}</p>
-                    </div>
-                    <div class="trend-box trend-purple">
-                        <span>Solicitudes corte semanal</span>
-                        <strong>{{ data.performance_semanal.delta_solicitudes }}</strong>
-                        <p>{{ data.performance_semanal.pct_solicitudes }}% vs mes anterior (mismas semanas)</p>
-                    </div>
-                    <div class="trend-box trend-red">
-                        <span>Cotizaciones corte semanal</span>
-                        <strong>{{ data.performance_semanal.delta_cotizaciones }}</strong>
-                        <p>{{ data.performance_semanal.pct_cotizaciones }}% vs mes anterior (mismas semanas)</p>
-                    </div>
+                <div class="chart-box chart-box-lg">
+                    <canvas id="monthlyTrendChart"></canvas>
                 </div>
             </section>
-            {% endif %}
 
-            <section class="grid-2">
-                <section class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Mensual</span>
-                            <h2>Tendencia mensual</h2>
-                        </div>
-                        <span class="pill">Mes</span>
-                    </div>
-                    <div class="chart-box chart-box-lg">
-                        <canvas id="monthlyTrendChart"></canvas>
-                    </div>
-                </section>
-
-                <section class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Semanal</span>
-                            <h2>Tendencia semanal</h2>
-                        </div>
-                        <span class="pill">Semana</span>
-                    </div>
-                    <div class="chart-box chart-box-lg">
-                        <canvas id="weeklyTrendChart"></canvas>
-                    </div>
-                </section>
-            </section>
-
-            <section class="grid-2">
-                <section class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Negocio</span>
-                            <h2>Valor por tipo de operación</h2>
-                        </div>
-                        <span class="pill">Valor</span>
-                    </div>
-                    <div class="chart-box chart-box-md">
-                        <canvas id="operationValueChart"></canvas>
-                    </div>
-                </section>
-
-                <section class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Clientes</span>
-                            <h2>Valor por cliente</h2>
-                        </div>
-                        <span class="pill">Top</span>
-                    </div>
-                    <div class="chart-box chart-box-md">
-                        <canvas id="clientValueChart"></canvas>
-                    </div>
-                </section>
-            </section>
-
-            <section class="grid-2">
-                <section class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Seguimiento</span>
-                            <h2>Estado de cotización</h2>
-                        </div>
-                        <span class="pill">Dona</span>
-                    </div>
-                    <div class="chart-box chart-box-md">
-                        <canvas id="estadoCotizacionChart"></canvas>
-                    </div>
-                </section>
-
-                <section class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Operaciones</span>
-                            <h2>Aging pendientes en operaciones</h2>
-                        </div>
-                        <span class="pill">Aging</span>
-                    </div>
-                    <div class="chart-box chart-box-md">
-                        <canvas id="agingOperacionesChart"></canvas>
-                    </div>
-                </section>
-            </section>
-
-            <section class="grid-2">
-                <section class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Origen</span>
-                            <h2>Solicitudes por canal</h2>
-                        </div>
-                        <span class="pill">Canales</span>
-                    </div>
-                    <div class="chart-box chart-box-md">
-                        <canvas id="channelChart"></canvas>
-                    </div>
-                </section>
-
-                <section class="panel">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Segmentación</span>
-                            <h2>Distribución por tipo de cliente</h2>
-                        </div>
-                        <span class="pill">Cliente</span>
-                    </div>
-                    <div class="chart-box chart-box-md">
-                        <canvas id="clientTypeChart"></canvas>
-                    </div>
-                </section>
-            </section>
-
-            <section class="panel panel-insight">
+            <section class="panel">
                 <div class="panel-head">
                     <div>
-                        <span class="panel-eyebrow">Insights</span>
-                        <h2>Titulares ejecutivos</h2>
+                        <span class="panel-eyebrow">Semanal</span>
+                        <h2>Tendencia semanal</h2>
                     </div>
-                    <span class="pill">Resumen</span>
+                    <span class="pill">Semana</span>
                 </div>
-                <ul class="insight-list">
-                    {% for item in data.insights %}
-                    <li>{{ item }}</li>
-                    {% endfor %}
-                </ul>
+                <div class="chart-box chart-box-lg">
+                    <canvas id="weeklyTrendChart"></canvas>
+                </div>
+            </section>
+        </section>
+
+        <section class="grid-2">
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Negocio</span>
+                        <h2>Valor por tipo de operación</h2>
+                    </div>
+                    <span class="pill">Valor</span>
+                </div>
+                <div class="chart-box chart-box-md">
+                    <canvas id="operationValueChart"></canvas>
+                </div>
             </section>
 
-            <section class="grid-2">
-                {% if data.estado_data %}
-                <section class="panel panel-strong">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Proceso</span>
-                            <h2>Estado de la solicitud</h2>
-                        </div>
-                        <span class="pill">Pipeline</span>
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Clientes</span>
+                        <h2>Valor por cliente</h2>
                     </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Estado</th>
-                                    <th>Cantidad</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% set ns = namespace(total=0) %}
-                                {% for row in data.estado_data %}
-                                {% set ns.total = ns.total + row.cantidad %}
-                                <tr>
-                                    <td>{{ row.estado }}</td>
-                                    <td>{{ row.cantidad }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr class="total-row">
-                                    <td>Total</td>
-                                    <td>{{ ns.total }}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </section>
-                {% endif %}
+                    <span class="pill">Top</span>
+                </div>
+                <div class="chart-box chart-box-md">
+                    <canvas id="clientValueChart"></canvas>
+                </div>
+            </section>
+        </section>
 
-                {% if data.estado_cotizacion_data %}
-                <section class="panel panel-strong">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Seguimiento</span>
-                            <h2>Estado de cotización</h2>
-                        </div>
-                        <span class="pill">Tracking</span>
+        <section class="grid-2">
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Seguimiento</span>
+                        <h2>Estado de cotización</h2>
                     </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Estado cotización</th>
-                                    <th>Cantidad</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% set ns = namespace(total=0) %}
-                                {% for row in data.estado_cotizacion_data %}
-                                {% set ns.total = ns.total + row.cantidad %}
-                                <tr>
-                                    <td>{{ row.estado_cotizacion }}</td>
-                                    <td>{{ row.cantidad }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr class="total-row">
-                                    <td>Total</td>
-                                    <td>{{ ns.total }}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </section>
-                {% endif %}
+                    <span class="pill">Dona</span>
+                </div>
+                <div class="chart-box chart-box-md">
+                    <canvas id="estadoCotizacionChart"></canvas>
+                </div>
             </section>
 
-            <section class="grid-2">
-                {% if data.valor_cliente_data %}
-                <section class="panel panel-strong">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Negocio</span>
-                            <h2>Valor por cliente</h2>
-                        </div>
-                        <span class="pill">Participación</span>
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Operaciones</span>
+                        <h2>Aging pendientes en operaciones</h2>
                     </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Cliente</th>
-                                    <th>Cantidad</th>
-                                    <th>Valor estimado</th>
-                                    <th>% participación</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% set ns = namespace(cantidad=0, valor=0) %}
-                                {% for row in data.valor_cliente_data %}
-                                {% set ns.cantidad = ns.cantidad + row.cantidad %}
-                                {% set ns.valor = ns.valor + row.valor_total %}
-                                <tr>
-                                    <td>{{ row.cliente }}</td>
-                                    <td>{{ row.cantidad }}</td>
-                                    <td>{{ row.valor_total | currency }}</td>
-                                    <td>{{ row.porcentaje_participacion }}%</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr class="total-row">
-                                    <td>Total</td>
-                                    <td>{{ ns.cantidad }}</td>
-                                    <td>{{ ns.valor | currency }}</td>
-                                    <td>100%</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </section>
-                {% endif %}
+                    <span class="pill">Aging</span>
+                </div>
+                <div class="chart-box chart-box-md">
+                    <canvas id="agingOperacionesChart"></canvas>
+                </div>
+            </section>
+        </section>
 
-                {% if data.responsable_data %}
-                <section class="panel panel-strong">
-                    <div class="panel-head">
-                        <div>
-                            <span class="panel-eyebrow">Equipo</span>
-                            <h2>Gestión por responsable</h2>
-                        </div>
-                        <span class="pill">Comercial</span>
+        <section class="grid-2">
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Origen</span>
+                        <h2>Solicitudes por canal</h2>
                     </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Responsable</th>
-                                    <th>Cantidad</th>
-                                    <th>Valor estimado</th>
-                                    <th>% participación</th>
-                                    <th>Resp. solicitud</th>
-                                    <th>Resp. cotización</th>
-                                    <th>Espera operaciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% set ns = namespace(cantidad=0, valor=0) %}
-                                {% for row in data.responsable_data %}
-                                {% set ns.cantidad = ns.cantidad + row.cantidad %}
-                                {% set ns.valor = ns.valor + row.valor_total %}
-                                <tr>
-                                    <td>{{ row.responsable_cotizacion }}</td>
-                                    <td>{{ row.cantidad }}</td>
-                                    <td>{{ row.valor_total | currency }}</td>
-                                    <td>{{ row.porcentaje_participacion }}%</td>
-                                    <td>{% if row.tiempo_respuesta_solicitud == row.tiempo_respuesta_solicitud %}{{ row.tiempo_respuesta_solicitud }} h{% endif %}</td>
-                                    <td>{% if row.tiempo_respuesta_cotizacion == row.tiempo_respuesta_cotizacion %}{{ row.tiempo_respuesta_cotizacion }} días{% endif %}</td>
-                                    <td>{% if row.espera_operaciones == row.espera_operaciones %}{{ row.espera_operaciones }} días{% endif %}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr class="total-row">
-                                    <td>Total</td>
-                                    <td>{{ ns.cantidad }}</td>
-                                    <td>{{ ns.valor | currency }}</td>
-                                    <td>100%</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </section>
-                {% endif %}
+                    <span class="pill">Canales</span>
+                </div>
+                <div class="chart-box chart-box-md">
+                    <canvas id="channelChart"></canvas>
+                </div>
             </section>
 
-            {% if data.tipo_operacion_data %}
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Segmentación</span>
+                        <h2>Distribución por tipo de cliente</h2>
+                    </div>
+                    <span class="pill">Cliente</span>
+                </div>
+                <div class="chart-box chart-box-md">
+                    <canvas id="clientTypeChart"></canvas>
+                </div>
+            </section>
+        </section>
+
+        <section class="panel panel-insight">
+            <div class="panel-head">
+                <div>
+                    <span class="panel-eyebrow">Insights</span>
+                    <h2>Titulares ejecutivos</h2>
+                </div>
+                <span class="pill">Resumen</span>
+            </div>
+            <ul class="insight-list">
+                {% for item in data.insights %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section class="grid-2">
+            {% if data.estado_data %}
             <section class="panel panel-strong">
                 <div class="panel-head">
                     <div>
-                        <span class="panel-eyebrow">Operación</span>
-                        <h2>Detalle por tipo de operación</h2>
+                        <span class="panel-eyebrow">Proceso</span>
+                        <h2>Estado de la solicitud</h2>
                     </div>
-                    <span class="pill">Mix operativo</span>
+                    <span class="pill">Pipeline</span>
                 </div>
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
-                                <th>Tipo de operación</th>
+                                <th>Estado</th>
+                                <th>Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set ns = namespace(total=0) %}
+                            {% for row in data.estado_data %}
+                            {% set ns.total = ns.total + row.cantidad %}
+                            <tr>
+                                <td>{{ row.estado }}</td>
+                                <td>{{ row.cantidad }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td>Total</td>
+                                <td>{{ ns.total }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+            {% endif %}
+
+            {% if data.estado_cotizacion_data %}
+            <section class="panel panel-strong">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Seguimiento</span>
+                        <h2>Estado de cotización</h2>
+                    </div>
+                    <span class="pill">Tracking</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Estado cotización</th>
+                                <th>Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set ns = namespace(total=0) %}
+                            {% for row in data.estado_cotizacion_data %}
+                            {% set ns.total = ns.total + row.cantidad %}
+                            <tr>
+                                <td>{{ row.estado_cotizacion }}</td>
+                                <td>{{ row.cantidad }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td>Total</td>
+                                <td>{{ ns.total }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </section>
+            {% endif %}
+        </section>
+
+        <section class="grid-2">
+            {% if data.valor_cliente_data %}
+            <section class="panel panel-strong">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Negocio</span>
+                        <h2>Valor por cliente</h2>
+                    </div>
+                    <span class="pill">Participación</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
                                 <th>Cantidad</th>
                                 <th>Valor estimado</th>
                                 <th>% participación</th>
@@ -662,11 +559,11 @@
                         </thead>
                         <tbody>
                             {% set ns = namespace(cantidad=0, valor=0) %}
-                            {% for row in data.tipo_operacion_data %}
+                            {% for row in data.valor_cliente_data %}
                             {% set ns.cantidad = ns.cantidad + row.cantidad %}
                             {% set ns.valor = ns.valor + row.valor_total %}
                             <tr>
-                                <td>{{ row.tipo_operacion }}</td>
+                                <td>{{ row.cliente }}</td>
                                 <td>{{ row.cantidad }}</td>
                                 <td>{{ row.valor_total | currency }}</td>
                                 <td>{{ row.porcentaje_participacion }}%</td>
@@ -686,62 +583,52 @@
             </section>
             {% endif %}
 
-            {% if data.detalle_data %}
-            <section class="panel">
+            {% if data.responsable_data %}
+            <section class="panel panel-strong">
                 <div class="panel-head">
                     <div>
-                        <span class="panel-eyebrow">Base filtrada</span>
-                        <h2>Detalle de solicitudes</h2>
+                        <span class="panel-eyebrow">Equipo</span>
+                        <h2>Gestión por responsable</h2>
                     </div>
-                    <span class="pill">Últimos registros</span>
+                    <span class="pill">Comercial</span>
                 </div>
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
-                                <th>Fecha ingreso</th>
-                                <th>Canal</th>
-                                <th>Cliente</th>
-                                <th>Tipo cliente</th>
-                                <th>Contacto</th>
-                                <th>Tipo solicitud</th>
-                                <th>Tipo operación</th>
-                                <th>Estado</th>
-                                <th>Estado cotización</th>
                                 <th>Responsable</th>
-                                <th>Acción a seguir</th>
-                                <th>Valor</th>
-                                <th>Observación</th>
+                                <th>Cantidad</th>
+                                <th>Valor estimado</th>
+                                <th>% participación</th>
+                                <th>Resp. solicitud</th>
+                                <th>Resp. cotización</th>
+                                <th>Tiempo operaciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% set ns = namespace(valor=0, cantidad=0) %}
-                            {% for row in data.detalle_data %}
-                            {% set ns.cantidad = ns.cantidad + 1 %}
-                            {% if row.valor_estimado_negocio is defined %}
-                                {% set ns.valor = ns.valor + row.valor_estimado_negocio %}
-                            {% endif %}
+                            {% set ns = namespace(cantidad=0, valor=0) %}
+                            {% for row in data.responsable_data %}
+                            {% set ns.cantidad = ns.cantidad + row.cantidad %}
+                            {% set ns.valor = ns.valor + row.valor_total %}
                             <tr>
-                                <td>{{ row.fecha_ingreso_solicitud_fmt if row.fecha_ingreso_solicitud_fmt is defined else '' }}</td>
-                                <td>{{ row.canal if row.canal is defined else '' }}</td>
-                                <td>{{ row.cliente if row.cliente is defined else '' }}</td>
-                                <td>{{ row.tipo_cliente if row.tipo_cliente is defined else '' }}</td>
-                                <td>{{ row.contacto if row.contacto is defined else '' }}</td>
-                                <td>{{ row.tipo_solicitud if row.tipo_solicitud is defined else '' }}</td>
-                                <td>{{ row.tipo_operacion if row.tipo_operacion is defined else '' }}</td>
-                                <td>{{ row.estado if row.estado is defined else '' }}</td>
-                                <td>{{ row.estado_cotizacion if row.estado_cotizacion is defined else '' }}</td>
-                                <td>{{ row.responsable_cotizacion if row.responsable_cotizacion is defined else '' }}</td>
-                                <td>{{ row.accion_a_seguir if row.accion_a_seguir is defined else '' }}</td>
-                                <td>{% if row.valor_estimado_negocio is defined and row.valor_estimado_negocio > 0 %}{{ row.valor_estimado_negocio | currency }}{% endif %}</td>
-                                <td>{{ row.observacion if row.observacion is defined else '' }}</td>
+                                <td>{{ row.responsable_cotizacion }}</td>
+                                <td>{{ row.cantidad }}</td>
+                                <td>{{ row.valor_total | currency }}</td>
+                                <td>{{ row.porcentaje_participacion }}%</td>
+                                <td>{% if row.tiempo_respuesta_solicitud == row.tiempo_respuesta_solicitud %}{{ row.tiempo_respuesta_solicitud }} h{% endif %}</td>
+                                <td>{% if row.tiempo_respuesta_cotizacion == row.tiempo_respuesta_cotizacion %}{{ row.tiempo_respuesta_cotizacion }} días{% endif %}</td>
+                                <td>{% if row.espera_operaciones == row.espera_operaciones %}{{ row.espera_operaciones }} días{% endif %}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot>
                             <tr class="total-row">
-                                <td colspan="11">Total registros: {{ ns.cantidad }}</td>
+                                <td>Total</td>
+                                <td>{{ ns.cantidad }}</td>
                                 <td>{{ ns.valor | currency }}</td>
+                                <td>100%</td>
+                                <td></td>
+                                <td></td>
                                 <td></td>
                             </tr>
                         </tfoot>
@@ -749,286 +636,365 @@
                 </div>
             </section>
             {% endif %}
-            {% endif %}
-        </main>
-    </div>
+        </section>
 
-    {% if data %}
-    <script>
-        Chart.register(ChartDataLabels);
+        {% if data.tipo_operacion_data %}
+        <section class="panel panel-strong">
+            <div class="panel-head">
+                <div>
+                    <span class="panel-eyebrow">Operación</span>
+                    <h2>Detalle por tipo de operación</h2>
+                </div>
+                <span class="pill">Mix operativo</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tipo de operación</th>
+                            <th>Cantidad</th>
+                            <th>Valor estimado</th>
+                            <th>% participación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set ns = namespace(cantidad=0, valor=0) %}
+                        {% for row in data.tipo_operacion_data %}
+                        {% set ns.cantidad = ns.cantidad + row.cantidad %}
+                        {% set ns.valor = ns.valor + row.valor_total %}
+                        <tr>
+                            <td>{{ row.tipo_operacion }}</td>
+                            <td>{{ row.cantidad }}</td>
+                            <td>{{ row.valor_total | currency }}</td>
+                            <td>{{ row.porcentaje_participacion }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td>Total</td>
+                            <td>{{ ns.cantidad }}</td>
+                            <td>{{ ns.valor | currency }}</td>
+                            <td>100%</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+        {% endif %}
 
-        const monthlyLabels = {{ data.chart_labels_json | safe }};
-        const monthlySolicitudes = {{ data.chart_solicitudes_json | safe }};
-        const monthlyCotizaciones = {{ data.chart_cotizaciones_json | safe }};
+        {% endif %}
+    </main>
+</div>
 
-        const weeklyLabels = {{ data.chart_weekly_labels_json | safe }};
-        const weeklySolicitudes = {{ data.chart_weekly_solicitudes_json | safe }};
-        const weeklyCotizaciones = {{ data.chart_weekly_cotizaciones_json | safe }};
+{% if data %}
+<script>
+Chart.register(ChartDataLabels);
 
-        const operationLabels = {{ data.chart_tipo_operacion_labels_json | safe }};
-        const operationValues = {{ data.chart_tipo_operacion_valores_json | safe }};
+const monthlyLabels = {{ data.chart_labels_json | safe }};
+const monthlySolicitudes = {{ data.chart_solicitudes_json | safe }};
+const monthlyCotizaciones = {{ data.chart_cotizaciones_json | safe }};
 
-        const clientLabels = {{ data.chart_cliente_labels_json | safe }};
-        const clientValues = {{ data.chart_cliente_valores_json | safe }};
+const weeklyLabels = {{ data.chart_weekly_labels_json | safe }};
+const weeklyMonths = {{ data.chart_weekly_months_json | safe }};
+const weeklySolicitudes = {{ data.chart_weekly_solicitudes_json | safe }};
+const weeklyCotizaciones = {{ data.chart_weekly_cotizaciones_json | safe }};
 
-        const channelLabels = {{ data.chart_canal_labels_json | safe }};
-        const channelValues = {{ data.chart_canal_valores_json | safe }};
+const operationLabels = {{ data.chart_tipo_operacion_labels_json | safe }};
+const operationValues = {{ data.chart_tipo_operacion_valores_json | safe }};
 
-        const clientTypeLabels = {{ data.chart_tipo_cliente_labels_json | safe }};
-        const clientTypeValues = {{ data.chart_tipo_cliente_valores_json | safe }};
+const clientLabels = {{ data.chart_cliente_labels_json | safe }};
+const clientValues = {{ data.chart_cliente_valores_json | safe }};
 
-        const estadoCotLabels = {{ data.chart_estado_cot_labels_json | safe }};
-        const estadoCotValues = {{ data.chart_estado_cot_valores_json | safe }};
+const channelLabels = {{ data.chart_canal_labels_json | safe }};
+const channelValues = {{ data.chart_canal_valores_json | safe }};
 
-        const agingLabels = {{ data.chart_aging_labels_json | safe }};
-        const agingValues = {{ data.chart_aging_valores_json | safe }};
+const clientTypeLabels = {{ data.chart_tipo_cliente_labels_json | safe }};
+const clientTypeValues = {{ data.chart_tipo_cliente_valores_json | safe }};
 
-        const moneyFormat = (value) => {
-            try {
-                return '$' + Number(value).toLocaleString('es-CO', { maximumFractionDigits: 0 });
-            } catch (e) {
-                return value;
+const estadoCotLabels = {{ data.chart_estado_cot_labels_json | safe }};
+const estadoCotValues = {{ data.chart_estado_cot_valores_json | safe }};
+
+const agingLabels = {{ data.chart_aging_labels_json | safe }};
+const agingValues = {{ data.chart_aging_valores_json | safe }};
+
+const shortMoney = (value) => {
+    const v = Number(value || 0);
+    if (v >= 1000000000) return '$' + (v / 1000000000).toFixed(2) + 'B';
+    if (v >= 1000000) return '$' + Math.round(v / 1000000) + 'M';
+    if (v >= 1000) return '$' + Math.round(v / 1000) + 'K';
+    return '$' + v;
+};
+
+const fullMoney = (value) => '$' + Number(value || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 });
+
+const labelStyle = {
+    color: '#1e293b',
+    font: { weight: '700', size: 10 }
+};
+
+new Chart(document.getElementById('monthlyTrendChart'), {
+    type: 'line',
+    data: {
+        labels: monthlyLabels,
+        datasets: [
+            {
+                label: 'Solicitudes',
+                data: monthlySolicitudes,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.15)',
+                tension: 0.35,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: '#2563eb',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            },
+            {
+                label: 'Cotizaciones',
+                data: monthlyCotizaciones,
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245,158,11,0.12)',
+                tension: 0.35,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: '#f59e0b',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
             }
-        };
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { labels: { color: '#334155', font: { weight: '700' } } },
+            datalabels: { ...labelStyle, anchor: 'end', align: 'top', formatter: v => v > 0 ? v : '' }
+        },
+        scales: {
+            y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
+            x: { ticks: { color: '#64748b' }, grid: { display: false } }
+        }
+    }
+});
 
-        const commonLabelStyle = {
-            color: '#1e293b',
-            font: { weight: '700', size: 10 }
-        };
+const monthSeparatorPlugin = {
+    id: 'monthSeparatorPlugin',
+    afterDraw(chart) {
+        const { ctx, chartArea, scales } = chart;
+        const xScale = scales.x;
+        if (!xScale || !weeklyMonths.length) return;
 
-        new Chart(document.getElementById('monthlyTrendChart'), {
-            type: 'line',
-            data: {
-                labels: monthlyLabels,
-                datasets: [
-                    {
-                        label: 'Solicitudes',
-                        data: monthlySolicitudes,
-                        borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37,99,235,0.15)',
-                        tension: 0.35,
-                        fill: true,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#2563eb',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
-                    },
-                    {
-                        label: 'Cotizaciones',
-                        data: monthlyCotizaciones,
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245,158,11,0.12)',
-                        tension: 0.35,
-                        fill: true,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#f59e0b',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2
+        ctx.save();
+
+        for (let i = 1; i < weeklyMonths.length; i++) {
+            if (weeklyMonths[i] !== weeklyMonths[i - 1]) {
+                const x = (xScale.getPixelForValue(i - 1) + xScale.getPixelForValue(i)) / 2;
+                ctx.beginPath();
+                ctx.moveTo(x, chartArea.top);
+                ctx.lineTo(x, chartArea.bottom);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(148,163,184,0.45)';
+                ctx.stroke();
+            }
+        }
+
+        let start = 0;
+        for (let i = 1; i <= weeklyMonths.length; i++) {
+            const cut = i === weeklyMonths.length || weeklyMonths[i] !== weeklyMonths[i - 1];
+            if (cut) {
+                const startX = xScale.getPixelForValue(start);
+                const endX = xScale.getPixelForValue(i - 1);
+                ctx.fillStyle = '#475569';
+                ctx.font = '700 11px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(weeklyMonths[i - 1], (startX + endX) / 2, chartArea.bottom + 34);
+                start = i;
+            }
+        }
+
+        ctx.restore();
+    }
+};
+
+new Chart(document.getElementById('weeklyTrendChart'), {
+    type: 'bar',
+    data: {
+        labels: weeklyLabels,
+        datasets: [
+            { label: 'Solicitudes', data: weeklySolicitudes, backgroundColor: '#2563eb', borderRadius: 8 },
+            { label: 'Cotizaciones', data: weeklyCotizaciones, backgroundColor: '#f59e0b', borderRadius: 8 }
+        ]
+    },
+    plugins: [monthSeparatorPlugin],
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { bottom: 36 } },
+        plugins: {
+            legend: { labels: { color: '#334155', font: { weight: '700' } } },
+            datalabels: { ...labelStyle, anchor: 'end', align: 'end', formatter: v => v > 0 ? v : '' }
+        },
+        scales: {
+            y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
+            x: { ticks: { color: '#64748b' }, grid: { display: false } }
+        }
+    }
+});
+
+new Chart(document.getElementById('operationValueChart'), {
+    type: 'bar',
+    data: {
+        labels: operationLabels,
+        datasets: [{
+            label: 'Valor estimado',
+            data: operationValues,
+            backgroundColor: ['#2563eb', '#0f766e', '#f59e0b', '#7c3aed', '#ef4444', '#0891b2'],
+            borderRadius: 10,
+            maxBarThickness: 52
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            datalabels: { ...labelStyle, anchor: 'end', align: 'end', formatter: v => v > 0 ? shortMoney(v) : '' },
+            tooltip: { callbacks: { label: ctx => 'Valor: ' + fullMoney(ctx.raw) } }
+        },
+        scales: {
+            y: { beginAtZero: true, ticks: { color: '#64748b', callback: v => shortMoney(v) }, grid: { color: 'rgba(148,163,184,0.16)' } },
+            x: { ticks: { color: '#64748b' }, grid: { display: false } }
+        }
+    }
+});
+
+new Chart(document.getElementById('clientValueChart'), {
+    type: 'bar',
+    data: {
+        labels: clientLabels,
+        datasets: [{
+            label: 'Valor estimado',
+            data: clientValues,
+            backgroundColor: '#0f766e',
+            borderRadius: 10,
+            maxBarThickness: 34
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+            legend: { display: false },
+            datalabels: { ...labelStyle, anchor: 'end', align: 'right', formatter: v => v > 0 ? shortMoney(v) : '' },
+            tooltip: { callbacks: { label: ctx => 'Valor: ' + fullMoney(ctx.raw) } }
+        },
+        scales: {
+            x: { beginAtZero: true, ticks: { color: '#64748b', callback: v => shortMoney(v) }, grid: { color: 'rgba(148,163,184,0.16)' } },
+            y: {
+                ticks: {
+                    color: '#64748b',
+                    callback: function(value) {
+                        const label = this.getLabelForValue(value);
+                        return label.length > 18 ? label.substring(0, 18) + '...' : label;
                     }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: '#334155', font: { weight: '700' } } },
-                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'top', formatter: (v) => v > 0 ? v : '' }
                 },
-                scales: {
-                    y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
-                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
-                }
+                grid: { display: false }
             }
-        });
+        }
+    }
+});
 
-        new Chart(document.getElementById('weeklyTrendChart'), {
-            type: 'bar',
-            data: {
-                labels: weeklyLabels,
-                datasets: [
-                    {
-                        label: 'Solicitudes',
-                        data: weeklySolicitudes,
-                        backgroundColor: '#2563eb',
-                        borderRadius: 8
-                    },
-                    {
-                        label: 'Cotizaciones',
-                        data: weeklyCotizaciones,
-                        backgroundColor: '#f59e0b',
-                        borderRadius: 8
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: '#334155', font: { weight: '700' } } },
-                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'end', formatter: (v) => v > 0 ? v : '' }
-                },
-                scales: {
-                    y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
-                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
-                }
-            }
-        });
+new Chart(document.getElementById('channelChart'), {
+    type: 'bar',
+    data: {
+        labels: channelLabels,
+        datasets: [{ label: 'Solicitudes', data: channelValues, backgroundColor: '#7c3aed', borderRadius: 10, maxBarThickness: 56 }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            datalabels: { ...labelStyle, anchor: 'end', align: 'end', formatter: v => v > 0 ? v : '' }
+        },
+        scales: {
+            y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
+            x: { ticks: { color: '#64748b' }, grid: { display: false } }
+        }
+    }
+});
 
-        new Chart(document.getElementById('operationValueChart'), {
-            type: 'bar',
-            data: {
-                labels: operationLabels,
-                datasets: [{
-                    label: 'Valor estimado',
-                    data: operationValues,
-                    backgroundColor: ['#2563eb', '#0f766e', '#f59e0b', '#7c3aed', '#ef4444', '#0891b2'],
-                    borderRadius: 10,
-                    maxBarThickness: 52
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'end', formatter: (v) => v > 0 ? moneyFormat(v) : '' }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: '#64748b', callback: (v) => moneyFormat(v) },
-                        grid: { color: 'rgba(148,163,184,0.16)' }
-                    },
-                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
-                }
-            }
-        });
+new Chart(document.getElementById('clientTypeChart'), {
+    type: 'doughnut',
+    data: {
+        labels: clientTypeLabels,
+        datasets: [{
+            data: clientTypeValues,
+            backgroundColor: ['#2563eb', '#f59e0b', '#0f766e', '#7c3aed', '#ef4444', '#0891b2', '#334155'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom', labels: { color: '#334155', font: { weight: '700' } } },
+            datalabels: { ...labelStyle, formatter: v => v > 0 ? v : '' }
+        }
+    }
+});
 
-        new Chart(document.getElementById('clientValueChart'), {
-            type: 'bar',
-            data: {
-                labels: clientLabels,
-                datasets: [{
-                    label: 'Valor estimado',
-                    data: clientValues,
-                    backgroundColor: '#0f766e',
-                    borderRadius: 10,
-                    maxBarThickness: 34
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: {
-                    legend: { display: false },
-                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'right', formatter: (v) => v > 0 ? moneyFormat(v) : '' }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: { color: '#64748b', callback: (v) => moneyFormat(v) },
-                        grid: { color: 'rgba(148,163,184,0.16)' }
-                    },
-                    y: { ticks: { color: '#64748b' }, grid: { display: false } }
-                }
-            }
-        });
+new Chart(document.getElementById('estadoCotizacionChart'), {
+    type: 'doughnut',
+    data: {
+        labels: estadoCotLabels,
+        datasets: [{
+            data: estadoCotValues,
+            backgroundColor: ['#16a34a', '#2563eb', '#f59e0b', '#ef4444', '#7c3aed'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom', labels: { color: '#334155', font: { weight: '700' } } },
+            datalabels: { ...labelStyle, formatter: v => v > 0 ? v : '' }
+        }
+    }
+});
 
-        new Chart(document.getElementById('channelChart'), {
-            type: 'bar',
-            data: {
-                labels: channelLabels,
-                datasets: [{
-                    label: 'Solicitudes',
-                    data: channelValues,
-                    backgroundColor: '#7c3aed',
-                    borderRadius: 10,
-                    maxBarThickness: 56
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'end', formatter: (v) => v > 0 ? v : '' }
-                },
-                scales: {
-                    y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
-                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
-                }
-            }
-        });
+new Chart(document.getElementById('agingOperacionesChart'), {
+    type: 'bar',
+    data: {
+        labels: agingLabels,
+        datasets: [{
+            label: 'Pendientes',
+            data: agingValues,
+            backgroundColor: ['#22c55e', '#facc15', '#fb923c', '#ef4444'],
+            borderRadius: 10,
+            maxBarThickness: 58
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            datalabels: { ...labelStyle, anchor: 'end', align: 'end', formatter: v => v > 0 ? v : '' }
+        },
+        scales: {
+            y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
+            x: { ticks: { color: '#64748b' }, grid: { display: false } }
+        }
+    }
+});
+</script>
+{% endif %}
 
-        new Chart(document.getElementById('clientTypeChart'), {
-            type: 'doughnut',
-            data: {
-                labels: clientTypeLabels,
-                datasets: [{
-                    data: clientTypeValues,
-                    backgroundColor: ['#2563eb', '#f59e0b', '#0f766e', '#7c3aed', '#ef4444', '#0891b2', '#334155'],
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#334155', font: { weight: '700' } } },
-                    datalabels: { ...commonLabelStyle, formatter: (v) => v > 0 ? v : '' }
-                }
-            }
-        });
-
-        new Chart(document.getElementById('estadoCotizacionChart'), {
-            type: 'doughnut',
-            data: {
-                labels: estadoCotLabels,
-                datasets: [{
-                    data: estadoCotValues,
-                    backgroundColor: ['#16a34a', '#2563eb', '#f59e0b', '#ef4444', '#7c3aed'],
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#334155', font: { weight: '700' } } },
-                    datalabels: { ...commonLabelStyle, formatter: (v) => v > 0 ? v : '' }
-                }
-            }
-        });
-
-        new Chart(document.getElementById('agingOperacionesChart'), {
-            type: 'bar',
-            data: {
-                labels: agingLabels,
-                datasets: [{
-                    label: 'Pendientes',
-                    data: agingValues,
-                    backgroundColor: ['#22c55e', '#facc15', '#fb923c', '#ef4444'],
-                    borderRadius: 10,
-                    maxBarThickness: 58
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    datalabels: { ...commonLabelStyle, anchor: 'end', align: 'end', formatter: (v) => v > 0 ? v : '' }
-                },
-                scales: {
-                    y: { beginAtZero: true, ticks: { color: '#64748b', precision: 0 }, grid: { color: 'rgba(148,163,184,0.16)' } },
-                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
-                }
-            }
-        });
-    </script>
-    {% endif %}
 </body>
 </html>

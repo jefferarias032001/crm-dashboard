@@ -21,10 +21,6 @@ ESTADOS_COTIZACION_VALIDOS = {
     "Perdida",
 }
 
-ESTADOS_OPERACIONES_PENDIENTES = {
-    "Enviada a Operaciones",
-}
-
 
 def find_column(df: pd.DataFrame, possible_names: list[str]) -> str | None:
     normalized = {str(col).strip().lower(): col for col in df.columns}
@@ -117,6 +113,26 @@ def month_label(period) -> str:
         12: "Diciembre",
     }
     return f"{months.get(dt.month, dt.month)} {dt.year}"
+
+
+def month_name_from_date(dt_value: pd.Timestamp) -> str:
+    if pd.isna(dt_value):
+        return ""
+    months = {
+        1: "Enero",
+        2: "Febrero",
+        3: "Marzo",
+        4: "Abril",
+        5: "Mayo",
+        6: "Junio",
+        7: "Julio",
+        8: "Agosto",
+        9: "Septiembre",
+        10: "Octubre",
+        11: "Noviembre",
+        12: "Diciembre",
+    }
+    return months.get(dt_value.month, "")
 
 
 def hours_to_text(value: float | int | None) -> str:
@@ -330,8 +346,8 @@ def load_data() -> pd.DataFrame:
     df["anio"] = iso.year.astype(int)
     df["semana_num"] = iso.week.astype(int)
     df["semana_label"] = "Sem " + df["semana_num"].astype(str)
+    df["mes_semana_label"] = df["fecha_ingreso_solicitud_dt"].apply(month_name_from_date)
 
-    # Orden de semana dentro del mes para comparaciones equivalentes
     month_df = pd.DataFrame({
         "periodo": df["periodo"],
         "semana_num": df["semana_num"]
@@ -383,7 +399,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     tasa_cotizacion = round((total_cotizaciones / total_solicitudes) * 100, 1) if total_solicitudes else 0
     valor_total = float(working_df["valor_estimado_negocio"].fillna(0).sum()) if "valor_estimado_negocio" in working_df.columns else 0
 
-    # Tiempo promedio respuesta solicitud
     tiempos_respuesta_validos = working_df[
         (working_df["horas_respuesta_solicitud"].notna()) &
         (working_df["horas_respuesta_solicitud"] >= 0)
@@ -394,7 +409,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         if len(tiempos_respuesta_validos) > 0 else 0
     )
 
-    # Tiempo promedio respuesta/cierre cotización
     tiempos_cierre_validos = working_df[
         (working_df["fecha_ingreso_cotizacion_dt"].notna()) &
         (working_df["fecha_cierre_cotizacion_dt"].notna()) &
@@ -407,8 +421,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         if len(tiempos_cierre_validos) > 0 else 0
     )
 
-    # Espera en operaciones: solo "Enviada a Operaciones"
-    # y se calcula desde Fecha Cierre Cotizacion hasta hoy
     pendientes_operaciones_df = working_df[
         (working_df["estado_cotizacion"] == "Enviada a Operaciones") &
         (working_df["fecha_cierre_cotizacion_dt"].notna())
@@ -418,7 +430,6 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         pendientes_operaciones_df["dias_espera_operaciones"] = (
             (now_col - pendientes_operaciones_df["fecha_cierre_cotizacion_dt"]).dt.total_seconds() / 86400
         )
-
         pendientes_operaciones_df = pendientes_operaciones_df[
             pendientes_operaciones_df["dias_espera_operaciones"] >= 0
         ]
@@ -429,9 +440,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         float(pendientes_operaciones_df["dias_espera_operaciones"].mean())
         if len(pendientes_operaciones_df) > 0 else 0
     )
-
     pendientes_operaciones_count = int(len(pendientes_operaciones_df))
-
     pendientes_operaciones_criticas = int(
         (pendientes_operaciones_df["dias_espera_operaciones"] > 3).sum()
     ) if len(pendientes_operaciones_df) > 0 else 0
@@ -467,7 +476,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         monthly_data = []
 
     weekly = (
-        df_unfiltered_for_trend.groupby(["anio", "semana_num", "semana_label"])
+        df_unfiltered_for_trend.groupby(["anio", "semana_num", "semana_label", "mes_semana_label"])
         .agg(
             solicitudes=("fecha_ingreso_solicitud_dt", "count"),
             cotizaciones=("tiene_cotizacion", "sum"),
@@ -475,12 +484,12 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         )
         .reset_index()
         .sort_values(["anio", "semana_num"])
-    ) if not df_unfiltered_for_trend.empty else pd.DataFrame(columns=["anio", "semana_num", "semana_label", "solicitudes", "cotizaciones", "valor"])
+    ) if not df_unfiltered_for_trend.empty else pd.DataFrame(columns=["anio", "semana_num", "semana_label", "mes_semana_label", "solicitudes", "cotizaciones", "valor"])
 
     if not weekly.empty:
-        weekly = weekly.tail(12)
-        weekly_data = weekly[["semana_label", "solicitudes", "cotizaciones", "valor"]].rename(
-            columns={"semana_label": "semana"}
+        weekly = weekly.tail(12).copy()
+        weekly_data = weekly[["semana_label", "mes_semana_label", "solicitudes", "cotizaciones", "valor"]].rename(
+            columns={"semana_label": "semana", "mes_semana_label": "mes"}
         ).to_dict(orient="records")
     else:
         weekly_data = []
@@ -752,10 +761,9 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             f"En {trend_summary['current_month']}, las solicitudes variaron {trend_summary['pct_solicitudes']}% y las cotizaciones {trend_summary['pct_cotizaciones']}% frente a {trend_summary['previous_month']}."
         )
 
-    if performance_semanal:
-        insights.append(
-            f"Al corte de semanas equivalentes del mes, las solicitudes variaron {performance_semanal['pct_solicitudes']}% y las cotizaciones {performance_semanal['pct_cotizaciones']}% frente al mes anterior."
-        )
+    insights.append(
+        f"Al corte de semanas equivalentes del mes, las solicitudes variaron {performance_semanal['pct_solicitudes']}% y las cotizaciones {performance_semanal['pct_cotizaciones']}% frente al mes anterior."
+    )
 
     if tiempo_cierre_promedio_dias > 0:
         insights.append(
@@ -789,6 +797,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     chart_cotizaciones = [row["cotizaciones"] for row in monthly_data]
 
     weekly_labels = [row["semana"] for row in weekly_data]
+    weekly_months = [row["mes"] for row in weekly_data]
     weekly_solicitudes = [row["solicitudes"] for row in weekly_data]
     weekly_cotizaciones = [row["cotizaciones"] for row in weekly_data]
 
@@ -823,6 +832,8 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         "tiempo_cierre_promedio_dias": tiempo_cierre_promedio_dias,
         "tiempo_cierre_promedio_txt": days_to_text(tiempo_cierre_promedio_dias),
         "valor_total": valor_total,
+        "valor_total_mm": valor_total / 1_000_000,
+        "valor_total_b": valor_total / 1_000_000_000,
 
         "promedio_espera_operaciones_dias": promedio_espera_operaciones_dias,
         "promedio_espera_operaciones_txt": days_to_text(promedio_espera_operaciones_dias),
@@ -861,6 +872,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         "chart_cotizaciones_json": json.dumps(chart_cotizaciones),
 
         "chart_weekly_labels_json": json.dumps(weekly_labels, ensure_ascii=False),
+        "chart_weekly_months_json": json.dumps(weekly_months, ensure_ascii=False),
         "chart_weekly_solicitudes_json": json.dumps(weekly_solicitudes),
         "chart_weekly_cotizaciones_json": json.dumps(weekly_cotizaciones),
 
