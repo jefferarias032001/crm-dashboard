@@ -78,6 +78,7 @@ def to_numeric_safe(series: pd.Series) -> pd.Series:
 def normalize_time_text(value: str) -> str:
     if pd.isna(value):
         return ""
+
     text = str(value).strip().lower()
     text = text.replace("a. m.", "AM").replace("p. m.", "PM")
     text = text.replace("a.m.", "AM").replace("p.m.", "PM")
@@ -88,8 +89,10 @@ def normalize_time_text(value: str) -> str:
 def combine_date_and_time(date_series: pd.Series, time_series: pd.Series) -> pd.Series:
     date_part = pd.to_datetime(date_series, errors="coerce", dayfirst=True)
     time_text = time_series.apply(normalize_time_text)
+
     combined = date_part.dt.strftime("%Y-%m-%d") + " " + time_text.astype(str)
     result = pd.to_datetime(combined, errors="coerce")
+
     fallback = pd.to_datetime(date_series, errors="coerce", dayfirst=True)
     return result.fillna(fallback)
 
@@ -97,6 +100,7 @@ def combine_date_and_time(date_series: pd.Series, time_series: pd.Series) -> pd.
 def month_label(period) -> str:
     if pd.isna(period):
         return ""
+
     dt = period.to_timestamp()
     months = {
         1: "Enero",
@@ -115,32 +119,37 @@ def month_label(period) -> str:
     return f"{months.get(dt.month, dt.month)} {dt.year}"
 
 
-def month_name_from_date(dt_value: pd.Timestamp) -> str:
-    if pd.isna(dt_value):
+def month_short_label(period) -> str:
+    if pd.isna(period):
         return ""
+
+    dt = period.to_timestamp()
     months = {
-        1: "Enero",
-        2: "Febrero",
-        3: "Marzo",
-        4: "Abril",
-        5: "Mayo",
-        6: "Junio",
-        7: "Julio",
-        8: "Agosto",
-        9: "Septiembre",
-        10: "Octubre",
-        11: "Noviembre",
-        12: "Diciembre",
+        1: "Ene",
+        2: "Feb",
+        3: "Mar",
+        4: "Abr",
+        5: "May",
+        6: "Jun",
+        7: "Jul",
+        8: "Ago",
+        9: "Sep",
+        10: "Oct",
+        11: "Nov",
+        12: "Dic",
     }
-    return months.get(dt_value.month, "")
+    return months.get(dt.month, "")
 
 
 def hours_to_text(value: float | int | None) -> str:
     if value is None or pd.isna(value):
         return ""
+
     value = float(value)
+
     if value < 24:
         return f"{value:.1f} h"
+
     days = value / 24
     return f"{days:.1f} días"
 
@@ -148,6 +157,7 @@ def hours_to_text(value: float | int | None) -> str:
 def days_to_text(value: float | int | None) -> str:
     if value is None or pd.isna(value):
         return ""
+
     return f"{float(value):.1f} días"
 
 
@@ -155,6 +165,7 @@ def get_filter_options(df: pd.DataFrame) -> dict:
     def options_for(col: str) -> list[str]:
         if col not in df.columns:
             return []
+
         vals = df[col].dropna().astype(str).str.strip()
         vals = vals[vals != ""]
         return sorted(vals.unique().tolist())
@@ -224,7 +235,7 @@ def load_data() -> pd.DataFrame:
             "Pon el archivo dentro de la carpeta del proyecto o ajusta DEFAULT_EXCEL_PATH."
         )
 
-    df = pd.read_excel(excel_path, sheet_name=SHEET_NAME)
+    df = pd.read_excel(excel_path, sheet_name=SHEET_NAME, engine="openpyxl")
     df.columns = [str(c).strip() for c in df.columns]
 
     col_canal = find_column(df, ["Canal", "CANAL", "Medio", "MEDIO"])
@@ -248,6 +259,7 @@ def load_data() -> pd.DataFrame:
     col_observacion = find_column(df, ["Observación", "OBSERVACIÓN", "OBSERVACION"])
 
     rename_map = {}
+
     if col_canal:
         rename_map[col_canal] = "canal"
     if col_fecha_ingreso_sol:
@@ -313,13 +325,13 @@ def load_data() -> pd.DataFrame:
 
     df["fecha_ingreso_solicitud_dt"] = combine_date_and_time(
         df["fecha_ingreso_solicitud"],
-        df["hora_ingreso_solicitud"] if "hora_ingreso_solicitud" in df.columns else pd.Series("", index=df.index)
+        df["hora_ingreso_solicitud"] if "hora_ingreso_solicitud" in df.columns else pd.Series("", index=df.index),
     )
 
     if "fecha_respuesta_solicitud" in df.columns:
         df["fecha_respuesta_solicitud_dt"] = combine_date_and_time(
             df["fecha_respuesta_solicitud"],
-            df["hora_respuesta_solicitud"] if "hora_respuesta_solicitud" in df.columns else pd.Series("", index=df.index)
+            df["hora_respuesta_solicitud"] if "hora_respuesta_solicitud" in df.columns else pd.Series("", index=df.index),
         )
     else:
         df["fecha_respuesta_solicitud_dt"] = pd.NaT
@@ -342,16 +354,20 @@ def load_data() -> pd.DataFrame:
     df = df[df["fecha_ingreso_solicitud_dt"].notna()].copy()
 
     df["periodo"] = df["fecha_ingreso_solicitud_dt"].dt.to_period("M")
+
     iso = df["fecha_ingreso_solicitud_dt"].dt.isocalendar()
     df["anio"] = iso.year.astype(int)
     df["semana_num"] = iso.week.astype(int)
     df["semana_label"] = "Sem " + df["semana_num"].astype(str)
-    df["mes_semana_label"] = df["fecha_ingreso_solicitud_dt"].apply(month_name_from_date)
+    df["mes_semana_label"] = df["periodo"].apply(month_short_label)
 
-    month_df = pd.DataFrame({
-        "periodo": df["periodo"],
-        "semana_num": df["semana_num"]
-    }).drop_duplicates().sort_values(["periodo", "semana_num"])
+    month_df = pd.DataFrame(
+        {
+            "periodo": df["periodo"],
+            "semana_num": df["semana_num"],
+        }
+    ).drop_duplicates().sort_values(["periodo", "semana_num"])
+
     month_df["orden_semana_mes"] = month_df.groupby("periodo").cumcount() + 1
     df = df.merge(month_df, on=["periodo", "semana_num"], how="left")
 
@@ -370,8 +386,8 @@ def load_data() -> pd.DataFrame:
     if "estado" in df.columns and "estado_cotizacion" in df.columns:
         estado_lower = clean_text(df["estado"]).str.lower()
         df["estado_cotizacion_valido"] = (
-            (estado_lower == "cotizacion") &
-            (df["estado_cotizacion"].isin(ESTADOS_COTIZACION_VALIDOS))
+            (estado_lower == "cotizacion")
+            & (df["estado_cotizacion"].isin(ESTADOS_COTIZACION_VALIDOS))
         )
     else:
         df["estado_cotizacion_valido"] = False
@@ -391,45 +407,73 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     current_period = working_df["periodo"].max()
     previous_period = current_period - 1 if pd.notna(current_period) else None
 
-    current_df = working_df[working_df["periodo"] == current_period].copy() if pd.notna(current_period) else pd.DataFrame()
-    previous_df = working_df[working_df["periodo"] == previous_period].copy() if previous_period is not None else pd.DataFrame()
+    current_df = (
+        working_df[working_df["periodo"] == current_period].copy()
+        if pd.notna(current_period)
+        else pd.DataFrame()
+    )
+
+    previous_df = (
+        working_df[working_df["periodo"] == previous_period].copy()
+        if previous_period is not None
+        else pd.DataFrame()
+    )
 
     total_solicitudes = int(len(working_df))
-    total_cotizaciones = int(working_df["tiene_cotizacion"].sum()) if "tiene_cotizacion" in working_df.columns else 0
-    tasa_cotizacion = round((total_cotizaciones / total_solicitudes) * 100, 1) if total_solicitudes else 0
-    valor_total = float(working_df["valor_estimado_negocio"].fillna(0).sum()) if "valor_estimado_negocio" in working_df.columns else 0
+
+    total_cotizaciones = (
+        int(working_df["tiene_cotizacion"].sum())
+        if "tiene_cotizacion" in working_df.columns
+        else 0
+    )
+
+    tasa_cotizacion = (
+        round((total_cotizaciones / total_solicitudes) * 100, 1)
+        if total_solicitudes
+        else 0
+    )
+
+    valor_total = (
+        float(working_df["valor_estimado_negocio"].fillna(0).sum())
+        if "valor_estimado_negocio" in working_df.columns
+        else 0
+    )
 
     tiempos_respuesta_validos = working_df[
-        (working_df["horas_respuesta_solicitud"].notna()) &
-        (working_df["horas_respuesta_solicitud"] >= 0)
-    ] if "horas_respuesta_solicitud" in working_df.columns else pd.DataFrame()
+        (working_df["horas_respuesta_solicitud"].notna())
+        & (working_df["horas_respuesta_solicitud"] >= 0)
+    ]
 
     tiempo_respuesta_promedio_horas = (
         float(tiempos_respuesta_validos["horas_respuesta_solicitud"].mean())
-        if len(tiempos_respuesta_validos) > 0 else 0
+        if len(tiempos_respuesta_validos) > 0
+        else 0
     )
 
     tiempos_cierre_validos = working_df[
-        (working_df["fecha_ingreso_cotizacion_dt"].notna()) &
-        (working_df["fecha_cierre_cotizacion_dt"].notna()) &
-        (working_df["dias_cierre_cotizacion"].notna()) &
-        (working_df["dias_cierre_cotizacion"] >= 0)
-    ] if "dias_cierre_cotizacion" in working_df.columns else pd.DataFrame()
+        (working_df["fecha_ingreso_cotizacion_dt"].notna())
+        & (working_df["fecha_cierre_cotizacion_dt"].notna())
+        & (working_df["dias_cierre_cotizacion"].notna())
+        & (working_df["dias_cierre_cotizacion"] >= 0)
+    ]
 
     tiempo_cierre_promedio_dias = (
         float(tiempos_cierre_validos["dias_cierre_cotizacion"].mean())
-        if len(tiempos_cierre_validos) > 0 else 0
+        if len(tiempos_cierre_validos) > 0
+        else 0
     )
 
     pendientes_operaciones_df = working_df[
-        (working_df["estado_cotizacion"] == "Enviada a Operaciones") &
-        (working_df["fecha_cierre_cotizacion_dt"].notna())
+        (working_df["estado_cotizacion"] == "Enviada a Operaciones")
+        & (working_df["fecha_cierre_cotizacion_dt"].notna())
     ].copy()
 
     if not pendientes_operaciones_df.empty:
         pendientes_operaciones_df["dias_espera_operaciones"] = (
-            (now_col - pendientes_operaciones_df["fecha_cierre_cotizacion_dt"]).dt.total_seconds() / 86400
+            (now_col - pendientes_operaciones_df["fecha_cierre_cotizacion_dt"]).dt.total_seconds()
+            / 86400
         )
+
         pendientes_operaciones_df = pendientes_operaciones_df[
             pendientes_operaciones_df["dias_espera_operaciones"] >= 0
         ]
@@ -438,25 +482,65 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
 
     promedio_espera_operaciones_dias = (
         float(pendientes_operaciones_df["dias_espera_operaciones"].mean())
-        if len(pendientes_operaciones_df) > 0 else 0
+        if len(pendientes_operaciones_df) > 0
+        else 0
     )
+
     pendientes_operaciones_count = int(len(pendientes_operaciones_df))
-    pendientes_operaciones_criticas = int(
-        (pendientes_operaciones_df["dias_espera_operaciones"] > 3).sum()
-    ) if len(pendientes_operaciones_df) > 0 else 0
+
+    pendientes_operaciones_criticas = (
+        int((pendientes_operaciones_df["dias_espera_operaciones"] > 3).sum())
+        if len(pendientes_operaciones_df) > 0
+        else 0
+    )
 
     current_solicitudes = int(len(current_df))
-    current_cotizaciones = int(current_df["tiene_cotizacion"].sum()) if not current_df.empty else 0
-    current_tasa_cotizacion = round((current_cotizaciones / current_solicitudes) * 100, 1) if current_solicitudes else 0
+
+    current_cotizaciones = (
+        int(current_df["tiene_cotizacion"].sum())
+        if not current_df.empty
+        else 0
+    )
+
+    current_tasa_cotizacion = (
+        round((current_cotizaciones / current_solicitudes) * 100, 1)
+        if current_solicitudes
+        else 0
+    )
 
     previous_solicitudes = int(len(previous_df))
-    previous_cotizaciones = int(previous_df["tiene_cotizacion"].sum()) if not previous_df.empty else 0
-    previous_tasa_cotizacion = round((previous_cotizaciones / previous_solicitudes) * 100, 1) if previous_solicitudes else 0
 
-    negocios_ganados = int((cot_df["estado_cotizacion"] == "Aprobada").sum()) if "estado_cotizacion" in cot_df.columns else 0
-    negocios_perdidos = int((cot_df["estado_cotizacion"] == "Perdida").sum()) if "estado_cotizacion" in cot_df.columns else 0
+    previous_cotizaciones = (
+        int(previous_df["tiene_cotizacion"].sum())
+        if not previous_df.empty
+        else 0
+    )
+
+    previous_tasa_cotizacion = (
+        round((previous_cotizaciones / previous_solicitudes) * 100, 1)
+        if previous_solicitudes
+        else 0
+    )
+
+    negocios_ganados = (
+        int((cot_df["estado_cotizacion"] == "Aprobada").sum())
+        if "estado_cotizacion" in cot_df.columns
+        else 0
+    )
+
+    negocios_perdidos = (
+        int((cot_df["estado_cotizacion"] == "Perdida").sum())
+        if "estado_cotizacion" in cot_df.columns
+        else 0
+    )
+
     total_con_resultado = negocios_ganados + negocios_perdidos
-    tasa_exito = round((negocios_ganados / total_con_resultado) * 100, 1) if total_con_resultado > 0 else 0
+
+    tasa_exito = (
+        round((negocios_ganados / total_con_resultado) * 100, 1)
+        if total_con_resultado > 0
+        else 0
+    )
 
     monthly = (
         df_unfiltered_for_trend.groupby("periodo")
@@ -467,7 +551,9 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         )
         .reset_index()
         .sort_values("periodo")
-    ) if not df_unfiltered_for_trend.empty else pd.DataFrame(columns=["periodo", "solicitudes", "cotizaciones", "valor"])
+    ) if not df_unfiltered_for_trend.empty else pd.DataFrame(
+        columns=["periodo", "solicitudes", "cotizaciones", "valor"]
+    )
 
     if not monthly.empty:
         monthly["mes"] = monthly["periodo"].apply(month_label)
@@ -476,25 +562,43 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         monthly_data = []
 
     weekly = (
-        df_unfiltered_for_trend.groupby(["anio", "semana_num", "semana_label", "mes_semana_label"])
+        df_unfiltered_for_trend.groupby(
+            ["periodo", "semana_num", "semana_label", "mes_semana_label"]
+        )
         .agg(
             solicitudes=("fecha_ingreso_solicitud_dt", "count"),
             cotizaciones=("tiene_cotizacion", "sum"),
             valor=("valor_estimado_negocio", "sum"),
         )
         .reset_index()
-        .sort_values(["anio", "semana_num"])
-    ) if not df_unfiltered_for_trend.empty else pd.DataFrame(columns=["anio", "semana_num", "semana_label", "mes_semana_label", "solicitudes", "cotizaciones", "valor"])
+        .sort_values(["periodo", "semana_num"])
+    ) if not df_unfiltered_for_trend.empty else pd.DataFrame(
+        columns=[
+            "periodo",
+            "semana_num",
+            "semana_label",
+            "mes_semana_label",
+            "solicitudes",
+            "cotizaciones",
+            "valor",
+        ]
+    )
 
     if not weekly.empty:
         weekly = weekly.tail(12).copy()
-        weekly_data = weekly[["semana_label", "mes_semana_label", "solicitudes", "cotizaciones", "valor"]].rename(
-            columns={"semana_label": "semana", "mes_semana_label": "mes"}
+        weekly_data = weekly[
+            ["semana_label", "mes_semana_label", "solicitudes", "cotizaciones", "valor"]
+        ].rename(
+            columns={
+                "semana_label": "semana",
+                "mes_semana_label": "mes",
+            }
         ).to_dict(orient="records")
     else:
         weekly_data = []
 
     trend_summary = {}
+
     if len(monthly) >= 2:
         last_row = monthly.iloc[-1]
         prev_row = monthly.iloc[-2]
@@ -502,8 +606,17 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         delta_sol = int(last_row["solicitudes"] - prev_row["solicitudes"])
         delta_cot = int(last_row["cotizaciones"] - prev_row["cotizaciones"])
 
-        pct_sol = round((delta_sol / prev_row["solicitudes"]) * 100, 1) if prev_row["solicitudes"] > 0 else 0
-        pct_cot = round((delta_cot / prev_row["cotizaciones"]) * 100, 1) if prev_row["cotizaciones"] > 0 else 0
+        pct_sol = (
+            round((delta_sol / prev_row["solicitudes"]) * 100, 1)
+            if prev_row["solicitudes"] > 0
+            else 0
+        )
+
+        pct_cot = (
+            round((delta_cot / prev_row["cotizaciones"]) * 100, 1)
+            if prev_row["cotizaciones"] > 0
+            else 0
+        )
 
         trend_summary = {
             "current_month": last_row["mes"],
@@ -538,14 +651,32 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             cut_solicitudes = int(len(current_cut_df))
             prev_cut_solicitudes = int(len(previous_cut_df))
 
-            cut_cotizaciones = int(current_cut_df["tiene_cotizacion"].sum()) if not current_cut_df.empty else 0
-            prev_cut_cotizaciones = int(previous_cut_df["tiene_cotizacion"].sum()) if not previous_cut_df.empty else 0
+            cut_cotizaciones = (
+                int(current_cut_df["tiene_cotizacion"].sum())
+                if not current_cut_df.empty
+                else 0
+            )
+
+            prev_cut_cotizaciones = (
+                int(previous_cut_df["tiene_cotizacion"].sum())
+                if not previous_cut_df.empty
+                else 0
+            )
 
             delta_sol_cut = cut_solicitudes - prev_cut_solicitudes
             delta_cot_cut = cut_cotizaciones - prev_cut_cotizaciones
 
-            pct_sol_cut = round((delta_sol_cut / prev_cut_solicitudes) * 100, 1) if prev_cut_solicitudes > 0 else 0
-            pct_cot_cut = round((delta_cot_cut / prev_cut_cotizaciones) * 100, 1) if prev_cut_cotizaciones > 0 else 0
+            pct_sol_cut = (
+                round((delta_sol_cut / prev_cut_solicitudes) * 100, 1)
+                if prev_cut_solicitudes > 0
+                else 0
+            )
+
+            pct_cot_cut = (
+                round((delta_cot_cut / prev_cut_cotizaciones) * 100, 1)
+                if prev_cut_cotizaciones > 0
+                else 0
+            )
 
             performance_semanal = {
                 "delta_solicitudes": int(delta_sol_cut),
@@ -555,6 +686,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             }
 
     canal_data = []
+
     if "canal" in working_df.columns:
         canal = (
             working_df.groupby("canal")
@@ -562,16 +694,27 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             .reset_index(name="cantidad")
             .sort_values("cantidad", ascending=False)
         )
-        canal = canal[(canal["canal"] != "") & (canal["cantidad"] > 0)]
+
+        canal = canal[
+            (canal["canal"] != "")
+            & (canal["cantidad"] > 0)
+        ]
+
         total_canal = canal["cantidad"].sum()
+
         for _, row in canal.iterrows():
-            canal_data.append({
-                "canal": row["canal"],
-                "cantidad": int(row["cantidad"]),
-                "porcentaje": round((row["cantidad"] / total_canal) * 100, 1) if total_canal else 0
-            })
+            canal_data.append(
+                {
+                    "canal": row["canal"],
+                    "cantidad": int(row["cantidad"]),
+                    "porcentaje": round((row["cantidad"] / total_canal) * 100, 1)
+                    if total_canal
+                    else 0,
+                }
+            )
 
     tipo_cliente_data = []
+
     if "tipo_cliente" in working_df.columns:
         tipo_cliente = (
             working_df.groupby("tipo_cliente")
@@ -579,26 +722,34 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             .reset_index(name="cantidad")
             .sort_values("cantidad", ascending=False)
         )
-        tipo_cliente = tipo_cliente[(tipo_cliente["tipo_cliente"] != "") & (tipo_cliente["cantidad"] > 0)]
+
+        tipo_cliente = tipo_cliente[
+            (tipo_cliente["tipo_cliente"] != "")
+            & (tipo_cliente["cantidad"] > 0)
+        ]
+
         tipo_cliente_data = tipo_cliente.to_dict(orient="records")
 
     tipo_operacion_data = []
+
     if "tipo_operacion" in working_df.columns and "valor_estimado_negocio" in working_df.columns:
         tipo_operacion = (
             working_df.groupby("tipo_operacion")
             .agg(
                 cantidad=("tipo_operacion", "count"),
-                valor_total=("valor_estimado_negocio", "sum")
+                valor_total=("valor_estimado_negocio", "sum"),
             )
             .reset_index()
             .sort_values("valor_total", ascending=False)
         )
+
         tipo_operacion = tipo_operacion[
-            (tipo_operacion["tipo_operacion"] != "") &
-            (tipo_operacion["valor_total"] > 0)
+            (tipo_operacion["tipo_operacion"] != "")
+            & (tipo_operacion["valor_total"] > 0)
         ]
 
         total_valor_operacion = float(tipo_operacion["valor_total"].sum())
+
         tipo_operacion["porcentaje_participacion"] = (
             (tipo_operacion["valor_total"] / total_valor_operacion) * 100
         ).round(1) if total_valor_operacion > 0 else 0
@@ -606,22 +757,25 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         tipo_operacion_data = tipo_operacion.to_dict(orient="records")
 
     valor_cliente_data = []
+
     if "cliente" in working_df.columns and "valor_estimado_negocio" in working_df.columns:
         cliente = (
             working_df.groupby("cliente")
             .agg(
                 cantidad=("cliente", "count"),
-                valor_total=("valor_estimado_negocio", "sum")
+                valor_total=("valor_estimado_negocio", "sum"),
             )
             .reset_index()
             .sort_values("valor_total", ascending=False)
         )
+
         cliente = cliente[
-            (cliente["cliente"] != "") &
-            (cliente["valor_total"] > 0)
+            (cliente["cliente"] != "")
+            & (cliente["valor_total"] > 0)
         ]
 
         total_valor_clientes = float(cliente["valor_total"].sum())
+
         cliente["porcentaje_participacion"] = (
             (cliente["valor_total"] / total_valor_clientes) * 100
         ).round(1) if total_valor_clientes > 0 else 0
@@ -629,6 +783,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         valor_cliente_data = cliente.head(10).to_dict(orient="records")
 
     estado_data = []
+
     if "estado" in working_df.columns:
         estado = (
             working_df.groupby("estado")
@@ -636,10 +791,16 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             .reset_index(name="cantidad")
             .sort_values("cantidad", ascending=False)
         )
-        estado = estado[(estado["estado"] != "") & (estado["cantidad"] > 0)]
+
+        estado = estado[
+            (estado["estado"] != "")
+            & (estado["cantidad"] > 0)
+        ]
+
         estado_data = estado.to_dict(orient="records")
 
     estado_cotizacion_data = []
+
     if "estado_cotizacion" in cot_df.columns:
         estado_cot = (
             cot_df.groupby("estado_cotizacion")
@@ -647,13 +808,16 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             .reset_index(name="cantidad")
             .sort_values("cantidad", ascending=False)
         )
+
         estado_cot = estado_cot[
-            (estado_cot["estado_cotizacion"] != "") &
-            (estado_cot["cantidad"] > 0)
+            (estado_cot["estado_cotizacion"] != "")
+            & (estado_cot["cantidad"] > 0)
         ]
+
         estado_cotizacion_data = estado_cot.to_dict(orient="records")
 
     responsable_data = []
+
     if "responsable_cotizacion" in working_df.columns:
         base_responsable = working_df[
             working_df["responsable_cotizacion"].fillna("").str.strip() != ""
@@ -672,7 +836,8 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
 
         espera_operaciones = (
             pendientes_operaciones_df[
-                pendientes_operaciones_df["responsable_cotizacion"].fillna("").str.strip() != ""
+                pendientes_operaciones_df["responsable_cotizacion"].fillna("").str.strip()
+                != ""
             ]
             .groupby("responsable_cotizacion")
             .agg(
@@ -684,18 +849,19 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         responsable = responsable.merge(
             espera_operaciones,
             on="responsable_cotizacion",
-            how="left"
+            how="left",
         )
 
         responsable = responsable[
-            (responsable["responsable_cotizacion"] != "") &
-            (
-                (responsable["valor_total"] > 0) |
-                (responsable["cantidad"] > 0)
+            (responsable["responsable_cotizacion"] != "")
+            & (
+                (responsable["valor_total"] > 0)
+                | (responsable["cantidad"] > 0)
             )
         ].copy()
 
         total_valor_responsable = float(responsable["valor_total"].sum())
+
         responsable["porcentaje_participacion"] = (
             (responsable["valor_total"] / total_valor_responsable) * 100
         ).round(1) if total_valor_responsable > 0 else 0
@@ -706,31 +872,38 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
 
         responsable = responsable.sort_values(
             ["valor_total", "cantidad"],
-            ascending=[False, False]
+            ascending=[False, False],
         )
 
         responsable_data = responsable.to_dict(orient="records")
 
     aging_operaciones_data = []
+
     if len(pendientes_operaciones_df) > 0:
         pendientes_operaciones_df["rango_aging"] = pd.cut(
             pendientes_operaciones_df["dias_espera_operaciones"],
             bins=[-1, 1, 2, 3, 9999],
-            labels=["0-1 días", "1-2 días", "2-3 días", "+3 días"]
+            labels=["0-1 días", "1-2 días", "2-3 días", "+3 días"],
         )
+
         aging = (
             pendientes_operaciones_df.groupby("rango_aging")
             .size()
             .reset_index(name="cantidad")
         )
+
         aging["rango_aging"] = aging["rango_aging"].astype(str)
         aging_operaciones_data = aging.to_dict(orient="records")
 
     detalle = working_df.copy()
-    detalle["fecha_ingreso_solicitud_fmt"] = detalle["fecha_ingreso_solicitud_dt"].dt.strftime("%Y-%m-%d %H:%M")
+
+    detalle["fecha_ingreso_solicitud_fmt"] = detalle["fecha_ingreso_solicitud_dt"].dt.strftime(
+        "%Y-%m-%d %H:%M"
+    )
 
     detalle_cols = [
-        c for c in [
+        c
+        for c in [
             "fecha_ingreso_solicitud_fmt",
             "canal",
             "cliente",
@@ -744,7 +917,8 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             "accion_a_seguir",
             "valor_estimado_negocio",
             "observacion",
-        ] if c in detalle.columns
+        ]
+        if c in detalle.columns
     ]
 
     detalle_data = (
@@ -758,38 +932,51 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
 
     if trend_summary:
         insights.append(
-            f"En {trend_summary['current_month']}, las solicitudes variaron {trend_summary['pct_solicitudes']}% y las cotizaciones {trend_summary['pct_cotizaciones']}% frente a {trend_summary['previous_month']}."
+            f"En {trend_summary['current_month']}, las solicitudes variaron "
+            f"{trend_summary['pct_solicitudes']}% y las cotizaciones "
+            f"{trend_summary['pct_cotizaciones']}% frente a "
+            f"{trend_summary['previous_month']}."
         )
 
     insights.append(
-        f"Al corte de semanas equivalentes del mes, las solicitudes variaron {performance_semanal['pct_solicitudes']}% y las cotizaciones {performance_semanal['pct_cotizaciones']}% frente al mes anterior."
+        f"Al corte de semanas equivalentes del mes, las solicitudes variaron "
+        f"{performance_semanal['pct_solicitudes']}% y las cotizaciones "
+        f"{performance_semanal['pct_cotizaciones']}% frente al mes anterior."
     )
 
     if tiempo_cierre_promedio_dias > 0:
         insights.append(
-            f"El tiempo promedio de cierre de cotización es de {tiempo_cierre_promedio_dias:.1f} días."
+            f"El tiempo promedio de cierre de cotización es de "
+            f"{tiempo_cierre_promedio_dias:.1f} días."
         )
 
     if pendientes_operaciones_count > 0:
         insights.append(
-            f"Hay {pendientes_operaciones_count} cotizaciones actualmente en estado 'Enviada a Operaciones', con una espera promedio de {promedio_espera_operaciones_dias:.1f} días desde su envío a operaciones."
+            f"Hay {pendientes_operaciones_count} cotizaciones actualmente en estado "
+            f"'Enviada a Operaciones', con una espera promedio de "
+            f"{promedio_espera_operaciones_dias:.1f} días desde su envío a operaciones."
         )
 
     if pendientes_operaciones_criticas > 0:
         insights.append(
-            f"Se identifican {pendientes_operaciones_criticas} cotizaciones críticas con más de 3 días en operaciones sin cambio de estado."
+            f"Se identifican {pendientes_operaciones_criticas} cotizaciones críticas "
+            f"con más de 3 días en operaciones sin cambio de estado."
         )
 
     if canal_data:
         top_canal = canal_data[0]
         insights.append(
-            f"El canal con mayor ingreso de solicitudes es {top_canal['canal']}, con {top_canal['cantidad']} registros ({top_canal['porcentaje']}% del total filtrado)."
+            f"El canal con mayor ingreso de solicitudes es {top_canal['canal']}, "
+            f"con {top_canal['cantidad']} registros "
+            f"({top_canal['porcentaje']}% del total filtrado)."
         )
 
     if tipo_operacion_data:
         top_operacion = tipo_operacion_data[0]
         insights.append(
-            f"El tipo de operación con mayor valor estimado es {top_operacion['tipo_operacion']}, con {top_operacion['porcentaje_participacion']}% del valor del negocio filtrado."
+            f"El tipo de operación con mayor valor estimado es "
+            f"{top_operacion['tipo_operacion']}, con "
+            f"{top_operacion['porcentaje_participacion']}% del valor del negocio filtrado."
         )
 
     chart_labels = [row["mes"] for row in monthly_data]
@@ -801,8 +988,13 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     weekly_solicitudes = [row["solicitudes"] for row in weekly_data]
     weekly_cotizaciones = [row["cotizaciones"] for row in weekly_data]
 
-    chart_tipo_operacion_labels = [row["tipo_operacion"] for row in tipo_operacion_data]
-    chart_tipo_operacion_valores = [float(row["valor_total"]) for row in tipo_operacion_data]
+    chart_tipo_operacion_labels = [
+        row["tipo_operacion"] for row in tipo_operacion_data
+    ]
+
+    chart_tipo_operacion_valores = [
+        float(row["valor_total"]) for row in tipo_operacion_data
+    ]
 
     chart_cliente_labels = [row["cliente"] for row in valor_cliente_data]
     chart_cliente_valores = [float(row["valor_total"]) for row in valor_cliente_data]
@@ -813,45 +1005,59 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     chart_tipo_cliente_labels = [row["tipo_cliente"] for row in tipo_cliente_data]
     chart_tipo_cliente_valores = [row["cantidad"] for row in tipo_cliente_data]
 
-    chart_estado_cot_labels = [row["estado_cotizacion"] for row in estado_cotizacion_data]
-    chart_estado_cot_valores = [row["cantidad"] for row in estado_cotizacion_data]
+    chart_estado_cot_labels = [
+        row["estado_cotizacion"] for row in estado_cotizacion_data
+    ]
 
-    chart_aging_labels = [row["rango_aging"] for row in aging_operaciones_data]
-    chart_aging_valores = [row["cantidad"] for row in aging_operaciones_data]
+    chart_estado_cot_valores = [
+        row["cantidad"] for row in estado_cotizacion_data
+    ]
+
+    chart_aging_labels = [
+        row["rango_aging"] for row in aging_operaciones_data
+    ]
+
+    chart_aging_valores = [
+        row["cantidad"] for row in aging_operaciones_data
+    ]
 
     return {
         "generated_at": now_col.strftime("%Y-%m-%d %H:%M"),
-        "current_period_label": month_label(current_period) if pd.notna(current_period) else "",
-        "previous_period_label": month_label(previous_period) if previous_period is not None else "",
-
+        "current_period_label": month_label(current_period)
+        if pd.notna(current_period)
+        else "",
+        "previous_period_label": month_label(previous_period)
+        if previous_period is not None
+        else "",
         "total_solicitudes": total_solicitudes,
         "total_cotizaciones": total_cotizaciones,
         "tasa_cotizacion": tasa_cotizacion,
         "tiempo_respuesta_promedio_horas": tiempo_respuesta_promedio_horas,
-        "tiempo_respuesta_promedio_txt": hours_to_text(tiempo_respuesta_promedio_horas),
+        "tiempo_respuesta_promedio_txt": hours_to_text(
+            tiempo_respuesta_promedio_horas
+        ),
         "tiempo_cierre_promedio_dias": tiempo_cierre_promedio_dias,
-        "tiempo_cierre_promedio_txt": days_to_text(tiempo_cierre_promedio_dias),
+        "tiempo_cierre_promedio_txt": days_to_text(
+            tiempo_cierre_promedio_dias
+        ),
         "valor_total": valor_total,
         "valor_total_mm": valor_total / 1_000_000,
         "valor_total_b": valor_total / 1_000_000_000,
-
         "promedio_espera_operaciones_dias": promedio_espera_operaciones_dias,
-        "promedio_espera_operaciones_txt": days_to_text(promedio_espera_operaciones_dias),
+        "promedio_espera_operaciones_txt": days_to_text(
+            promedio_espera_operaciones_dias
+        ),
         "pendientes_operaciones_count": pendientes_operaciones_count,
         "pendientes_operaciones_criticas": pendientes_operaciones_criticas,
-
         "negocios_ganados": negocios_ganados,
         "negocios_perdidos": negocios_perdidos,
         "tasa_exito": tasa_exito,
-
         "current_solicitudes": current_solicitudes,
         "current_cotizaciones": current_cotizaciones,
         "current_tasa_cotizacion": current_tasa_cotizacion,
-
         "previous_solicitudes": previous_solicitudes,
         "previous_cotizaciones": previous_cotizaciones,
         "previous_tasa_cotizacion": previous_tasa_cotizacion,
-
         "monthly_data": monthly_data,
         "weekly_data": weekly_data,
         "trend_summary": trend_summary,
@@ -866,32 +1072,48 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         "aging_operaciones_data": aging_operaciones_data,
         "detalle_data": detalle_data,
         "insights": insights,
-
         "chart_labels_json": json.dumps(chart_labels, ensure_ascii=False),
         "chart_solicitudes_json": json.dumps(chart_solicitudes),
         "chart_cotizaciones_json": json.dumps(chart_cotizaciones),
-
         "chart_weekly_labels_json": json.dumps(weekly_labels, ensure_ascii=False),
         "chart_weekly_months_json": json.dumps(weekly_months, ensure_ascii=False),
         "chart_weekly_solicitudes_json": json.dumps(weekly_solicitudes),
         "chart_weekly_cotizaciones_json": json.dumps(weekly_cotizaciones),
-
-        "chart_tipo_operacion_labels_json": json.dumps(chart_tipo_operacion_labels, ensure_ascii=False),
-        "chart_tipo_operacion_valores_json": json.dumps(chart_tipo_operacion_valores),
-
-        "chart_cliente_labels_json": json.dumps(chart_cliente_labels, ensure_ascii=False),
+        "chart_tipo_operacion_labels_json": json.dumps(
+            chart_tipo_operacion_labels,
+            ensure_ascii=False,
+        ),
+        "chart_tipo_operacion_valores_json": json.dumps(
+            chart_tipo_operacion_valores
+        ),
+        "chart_cliente_labels_json": json.dumps(
+            chart_cliente_labels,
+            ensure_ascii=False,
+        ),
         "chart_cliente_valores_json": json.dumps(chart_cliente_valores),
-
-        "chart_canal_labels_json": json.dumps(chart_canal_labels, ensure_ascii=False),
+        "chart_canal_labels_json": json.dumps(
+            chart_canal_labels,
+            ensure_ascii=False,
+        ),
         "chart_canal_valores_json": json.dumps(chart_canal_valores),
-
-        "chart_tipo_cliente_labels_json": json.dumps(chart_tipo_cliente_labels, ensure_ascii=False),
-        "chart_tipo_cliente_valores_json": json.dumps(chart_tipo_cliente_valores),
-
-        "chart_estado_cot_labels_json": json.dumps(chart_estado_cot_labels, ensure_ascii=False),
-        "chart_estado_cot_valores_json": json.dumps(chart_estado_cot_valores),
-
-        "chart_aging_labels_json": json.dumps(chart_aging_labels, ensure_ascii=False),
+        "chart_tipo_cliente_labels_json": json.dumps(
+            chart_tipo_cliente_labels,
+            ensure_ascii=False,
+        ),
+        "chart_tipo_cliente_valores_json": json.dumps(
+            chart_tipo_cliente_valores
+        ),
+        "chart_estado_cot_labels_json": json.dumps(
+            chart_estado_cot_labels,
+            ensure_ascii=False,
+        ),
+        "chart_estado_cot_valores_json": json.dumps(
+            chart_estado_cot_valores
+        ),
+        "chart_aging_labels_json": json.dumps(
+            chart_aging_labels,
+            ensure_ascii=False,
+        ),
         "chart_aging_valores_json": json.dumps(chart_aging_valores),
     }
 
@@ -922,6 +1144,7 @@ def index():
 
         filters_without_month = filters.copy()
         filters_without_month["mes"] = ""
+
         trend_df = apply_filters(df, filters_without_month)
 
         data = build_dashboard_data(filtered_df, trend_df)
@@ -932,8 +1155,9 @@ def index():
             error=None,
             filters=filters,
             filter_options=filter_options,
-            theme=theme
+            theme=theme,
         )
+
     except Exception as e:
         return render_template(
             "index.html",
@@ -941,7 +1165,7 @@ def index():
             error=str(e),
             filters={},
             filter_options={},
-            theme="A"
+            theme="A",
         )
 
 
@@ -970,6 +1194,7 @@ def exportar_excel():
         "valor_estimado_negocio",
         "observacion",
     ]
+
     export_cols = [c for c in export_cols if c in filtered_df.columns]
     export_df = filtered_df[export_cols].copy()
 
@@ -992,9 +1217,11 @@ def exportar_excel():
         "valor_estimado_negocio": "Valor estimado negocio",
         "observacion": "Observación",
     }
+
     export_df = export_df.rename(columns=rename_export)
 
     output = BytesIO()
+
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
         export_df.to_excel(writer, index=False, sheet_name="CRM Filtrado")
 
@@ -1004,7 +1231,7 @@ def exportar_excel():
         output,
         as_attachment=True,
         download_name="crm_filtrado.xlsx",
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
 
