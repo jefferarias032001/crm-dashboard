@@ -1056,6 +1056,8 @@ new Chart(document.getElementById('weeklyTrendChart'), {
     }
 });
 
+const operationMaxValue = Math.max(...operationValues, 0);
+
 new Chart(document.getElementById('operationValueChart'), {
     type: 'bar',
     data: {
@@ -1080,6 +1082,14 @@ new Chart(document.getElementById('operationValueChart'), {
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: {
+                top: 30,
+                right: 24,
+                bottom: 6,
+                left: 6
+            }
+        },
         plugins: {
             legend: {
                 display: false
@@ -1088,6 +1098,9 @@ new Chart(document.getElementById('operationValueChart'), {
                 ...labelStyle,
                 anchor: 'end',
                 align: 'end',
+                offset: 6,
+                clip: false,
+                clamp: true,
                 formatter: v => v > 0 ? shortMoney(v) : ''
             },
             tooltip: {
@@ -1099,6 +1112,7 @@ new Chart(document.getElementById('operationValueChart'), {
         scales: {
             y: {
                 beginAtZero: true,
+                suggestedMax: operationMaxValue * 1.18,
                 ticks: {
                     color: '#64748b',
                     callback: v => shortMoney(v)
@@ -1119,6 +1133,8 @@ new Chart(document.getElementById('operationValueChart'), {
     }
 });
 
+const clientMaxValue = Math.max(...clientValues, 0);
+
 new Chart(document.getElementById('clientValueChart'), {
     type: 'bar',
     data: {
@@ -1137,6 +1153,14 @@ new Chart(document.getElementById('clientValueChart'), {
         responsive: true,
         maintainAspectRatio: false,
         indexAxis: 'y',
+        layout: {
+            padding: {
+                right: 80,
+                left: 5,
+                top: 10,
+                bottom: 10
+            }
+        },
         plugins: {
             legend: {
                 display: false
@@ -1145,6 +1169,9 @@ new Chart(document.getElementById('clientValueChart'), {
                 ...labelStyle,
                 anchor: 'end',
                 align: 'right',
+                offset: 6,
+                clip: false,
+                clamp: true,
                 formatter: v => v > 0 ? shortMoney(v) : ''
             },
             tooltip: {
@@ -1156,6 +1183,7 @@ new Chart(document.getElementById('clientValueChart'), {
         scales: {
             x: {
                 beginAtZero: true,
+                suggestedMax: clientMaxValue * 1.18,
                 ticks: {
                     color: '#64748b',
                     callback: v => shortMoney(v)
@@ -1180,6 +1208,8 @@ new Chart(document.getElementById('clientValueChart'), {
     }
 });
 
+const tipoOperacionCantidadMax = Math.max(...tipoOperacionCantidadValues, 0);
+
 new Chart(document.getElementById('tipoOperacionCantidadChart'), {
     type: 'bar',
     data: {
@@ -1197,6 +1227,14 @@ new Chart(document.getElementById('tipoOperacionCantidadChart'), {
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: {
+                top: 30,
+                right: 14,
+                bottom: 6,
+                left: 6
+            }
+        },
         plugins: {
             legend: {
                 display: false
@@ -1205,12 +1243,16 @@ new Chart(document.getElementById('tipoOperacionCantidadChart'), {
                 ...labelStyle,
                 anchor: 'end',
                 align: 'end',
+                offset: 6,
+                clip: false,
+                clamp: true,
                 formatter: v => v > 0 ? v : ''
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
+                suggestedMax: Math.ceil(tipoOperacionCantidadMax * 1.18),
                 ticks: {
                     color: '#64748b',
                     precision: 0
@@ -1221,7 +1263,9 @@ new Chart(document.getElementById('tipoOperacionCantidadChart'), {
             },
             x: {
                 ticks: {
-                    color: '#64748b'
+                    color: '#64748b',
+                    maxRotation: 40,
+                    minRotation: 40
                 },
                 grid: {
                     display: false
@@ -1332,17 +1376,17 @@ function renderTipoOperacionMensualTable() {
 
         const total = valores.reduce((acc, val) => acc + val, 0);
 
-const ultimo = valores[valores.length - 1] || 0;
-const anterior = valores.length > 1 ? valores[valores.length - 2] || 0 : 0;
+        const ultimo = valores[valores.length - 1] || 0;
+        const anterior = valores.length > 1 ? valores[valores.length - 2] || 0 : 0;
 
-const variacion = ultimo - anterior;
+        const variacion = ultimo - anterior;
 
-return {
-    tipo,
-    valores,
-    total,
-    variacion
-};
+        return {
+            tipo,
+            valores,
+            total,
+            variacion
+        };
     }).sort((a, b) => b.total - a.total);
 
     const headerMeses = meses.map(mes => `<th>${mes.label}</th>`).join("");
@@ -1380,7 +1424,7 @@ return {
                     <th>Tipo de operación</th>
                     <th>Total</th>
                     ${headerMeses}
-                    <th>Var.</th>
+                    <th>Var. vs mes ant.</th>
                     <th>Tendencia</th>
                 </tr>
             </thead>
@@ -1410,6 +1454,14 @@ new Chart(document.getElementById('channelChart'), {
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: {
+                top: 20,
+                right: 14,
+                bottom: 6,
+                left: 6
+            }
+        },
         plugins: {
             legend: {
                 display: false
@@ -1418,12 +1470,16 @@ new Chart(document.getElementById('channelChart'), {
                 ...labelStyle,
                 anchor: 'end',
                 align: 'end',
+                offset: 6,
+                clip: false,
+                clamp: true,
                 formatter: v => v > 0 ? v : ''
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
+                suggestedMax: Math.max(...channelValues, 0) * 1.15,
                 ticks: {
                     color: '#64748b',
                     precision: 0
@@ -1510,6 +1566,14 @@ new Chart(document.getElementById('agingOperacionesChart'), {
     options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: {
+                top: 20,
+                right: 14,
+                bottom: 6,
+                left: 6
+            }
+        },
         plugins: {
             legend: {
                 display: false
@@ -1518,12 +1582,16 @@ new Chart(document.getElementById('agingOperacionesChart'), {
                 ...labelStyle,
                 anchor: 'end',
                 align: 'end',
+                offset: 6,
+                clip: false,
+                clamp: true,
                 formatter: v => v > 0 ? v : ''
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
+                suggestedMax: Math.max(...agingValues, 0) * 1.15,
                 ticks: {
                     color: '#64748b',
                     precision: 0
