@@ -876,6 +876,36 @@ tfoot .total-row td {
     text-align: center;
 }
 
+.full-base-table {
+    max-height: 520px;
+    overflow: auto;
+}
+
+.full-base-table table {
+    min-width: 1800px;
+    table-layout: auto;
+}
+
+.full-base-table th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    white-space: nowrap;
+}
+
+.full-base-table td {
+    white-space: nowrap;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.full-base-table td:hover {
+    white-space: normal;
+    overflow: visible;
+    background: #f8fafc;
+}
+
 .error-box {
     background: linear-gradient(135deg, #fff1f2, #ffe4e6);
     color: #9f1239;

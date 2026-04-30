@@ -730,59 +730,36 @@
             <div class="panel-head">
                 <div>
                     <span class="panel-eyebrow">Base filtrada</span>
-                    <h2>Detalle de solicitudes</h2>
+                    <h2>Detalle completo de solicitudes</h2>
                 </div>
-                <span class="pill">Últimos registros</span>
+                <span class="pill">Base completa</span>
             </div>
 
-            <div class="table-wrap">
+            <div class="table-wrap full-base-table">
                 <table>
                     <thead>
                         <tr>
-                            <th>Fecha ingreso</th>
-                            <th>Canal</th>
-                            <th>Cliente</th>
-                            <th>Tipo cliente</th>
-                            <th>Contacto</th>
-                            <th>Tipo solicitud</th>
-                            <th>Tipo operación</th>
-                            <th>Estado</th>
-                            <th>Estado cotización</th>
-                            <th>Responsable</th>
-                            <th>Acción a seguir</th>
-                            <th>Valor</th>
-                            <th>Observación</th>
+                            {% for col in data.detalle_columns %}
+                            <th>{{ col.label }}</th>
+                            {% endfor %}
                         </tr>
                     </thead>
+
                     <tbody>
-                        {% set ns = namespace(valor=0, cantidad=0) %}
                         {% for row in data.detalle_data %}
-                        {% set ns.cantidad = ns.cantidad + 1 %}
-                        {% if row.valor_estimado_negocio is defined %}
-                            {% set ns.valor = ns.valor + row.valor_estimado_negocio %}
-                        {% endif %}
                         <tr>
-                            <td>{{ row.fecha_ingreso_solicitud_fmt if row.fecha_ingreso_solicitud_fmt is defined else '' }}</td>
-                            <td>{{ row.canal if row.canal is defined else '' }}</td>
-                            <td>{{ row.cliente if row.cliente is defined else '' }}</td>
-                            <td>{{ row.tipo_cliente if row.tipo_cliente is defined else '' }}</td>
-                            <td>{{ row.contacto if row.contacto is defined else '' }}</td>
-                            <td>{{ row.tipo_solicitud if row.tipo_solicitud is defined else '' }}</td>
-                            <td>{{ row.tipo_operacion if row.tipo_operacion is defined else '' }}</td>
-                            <td>{{ row.estado if row.estado is defined else '' }}</td>
-                            <td>{{ row.estado_cotizacion if row.estado_cotizacion is defined else '' }}</td>
-                            <td>{{ row.responsable_cotizacion if row.responsable_cotizacion is defined else '' }}</td>
-                            <td>{{ row.accion_a_seguir if row.accion_a_seguir is defined else '' }}</td>
-                            <td>{% if row.valor_estimado_negocio is defined and row.valor_estimado_negocio > 0 %}{{ row.valor_estimado_negocio | currency }}{% endif %}</td>
-                            <td>{{ row.observacion if row.observacion is defined else '' }}</td>
+                            {% for col in data.detalle_columns %}
+                            <td>{{ row.get(col.key, "") }}</td>
+                            {% endfor %}
                         </tr>
                         {% endfor %}
                     </tbody>
+
                     <tfoot>
                         <tr class="total-row">
-                            <td colspan="11">Total registros: {{ ns.cantidad }}</td>
-                            <td>{{ ns.valor | currency }}</td>
-                            <td></td>
+                            <td colspan="{{ data.detalle_columns|length }}">
+                                Total registros: {{ data.detalle_data|length }}
+                            </td>
                         </tr>
                     </tfoot>
                 </table>

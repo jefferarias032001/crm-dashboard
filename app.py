@@ -973,36 +973,118 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
 
     detalle = working_df.copy()
 
-    detalle["fecha_ingreso_solicitud_fmt"] = detalle["fecha_ingreso_solicitud_dt"].dt.strftime(
-        "%Y-%m-%d %H:%M"
-    )
+    detalle["dias_espera_operaciones"] = pd.NA
 
-    detalle_cols = [
-        c
-        for c in [
-            "fecha_ingreso_solicitud_fmt",
-            "canal",
-            "cliente",
-            "tipo_cliente",
-            "contacto",
-            "tipo_solicitud",
-            "tipo_operacion",
-            "estado",
-            "estado_cotizacion",
-            "responsable_cotizacion",
-            "accion_a_seguir",
-            "valor_estimado_negocio",
-            "observacion",
-        ]
-        if c in detalle.columns
+    if len(pendientes_operaciones_df) > 0:
+        detalle.loc[
+            pendientes_operaciones_df.index,
+            "dias_espera_operaciones"
+        ] = pendientes_operaciones_df["dias_espera_operaciones"]
+
+    if "fecha_ingreso_solicitud_dt" in detalle.columns:
+        detalle = detalle.sort_values(
+            "fecha_ingreso_solicitud_dt",
+            ascending=False,
+        )
+
+    preferred_cols = [
+        "fecha_ingreso_solicitud_dt",
+        "fecha_respuesta_solicitud_dt",
+        "fecha_ingreso_cotizacion_dt",
+        "fecha_cierre_cotizacion_dt",
+        "periodo",
+        "anio",
+        "semana_num",
+        "semana_label",
+        "canal",
+        "cliente",
+        "tipo_cliente",
+        "contacto",
+        "celular",
+        "tipo_solicitud",
+        "tipo_operacion",
+        "estado",
+        "estado_cotizacion",
+        "responsable_cotizacion",
+        "accion_a_seguir",
+        "valor_estimado_negocio",
+        "horas_respuesta_solicitud",
+        "dias_cierre_cotizacion",
+        "dias_espera_operaciones",
+        "tiene_respuesta_solicitud",
+        "tiene_cotizacion",
+        "cotizacion_cerrada",
+        "estado_cotizacion_valido",
+        "observacion",
     ]
 
-    detalle_data = (
-        detalle[detalle_cols]
-        .sort_values("fecha_ingreso_solicitud_fmt", ascending=False)
-        .head(50)
-        .to_dict(orient="records")
-    )
+    detalle_cols = [col for col in preferred_cols if col in detalle.columns]
+    extra_cols = [col for col in detalle.columns if col not in detalle_cols]
+    detalle_cols = detalle_cols + extra_cols
+
+    label_map = {
+        "fecha_ingreso_solicitud_dt": "Fecha ingreso solicitud",
+        "fecha_respuesta_solicitud_dt": "Fecha respuesta solicitud",
+        "fecha_ingreso_cotizacion_dt": "Fecha ingreso cotización",
+        "fecha_cierre_cotizacion_dt": "Fecha cierre cotización",
+        "periodo": "Periodo",
+        "anio": "Año",
+        "semana_num": "Semana año",
+        "semana_label": "Semana",
+        "canal": "Canal",
+        "cliente": "Cliente",
+        "tipo_cliente": "Tipo de cliente",
+        "contacto": "Contacto",
+        "celular": "Celular",
+        "tipo_solicitud": "Tipo de solicitud",
+        "tipo_operacion": "Tipo de operación",
+        "estado": "Estado",
+        "estado_cotizacion": "Estado cotización",
+        "responsable_cotizacion": "Responsable cotización",
+        "accion_a_seguir": "Acción a seguir",
+        "valor_estimado_negocio": "Valor estimado negocio",
+        "horas_respuesta_solicitud": "Horas respuesta solicitud",
+        "dias_cierre_cotizacion": "Días respuesta cotización",
+        "dias_espera_operaciones": "Días en operaciones",
+        "tiene_respuesta_solicitud": "Tiene respuesta solicitud",
+        "tiene_cotizacion": "Tiene cotización",
+        "cotizacion_cerrada": "Cotización cerrada",
+        "estado_cotizacion_valido": "Estado cotización válido",
+        "observacion": "Observación",
+    }
+
+    detalle_columns = [
+        {
+            "key": col,
+            "label": label_map.get(col, str(col).replace("_", " ").title()),
+        }
+        for col in detalle_cols
+    ]
+
+    detalle_export = detalle[detalle_cols].copy()
+
+    for col in detalle_export.columns:
+        if pd.api.types.is_datetime64_any_dtype(detalle_export[col]):
+            detalle_export[col] = detalle_export[col].dt.strftime("%Y-%m-%d %H:%M")
+
+        if pd.api.types.is_period_dtype(detalle_export[col]):
+            detalle_export[col] = detalle_export[col].astype(str)
+
+    for col in [
+        "valor_estimado_negocio",
+        "horas_respuesta_solicitud",
+        "dias_cierre_cotizacion",
+        "dias_espera_operaciones",
+    ]:
+        if col in detalle_export.columns:
+            detalle_export[col] = pd.to_numeric(
+                detalle_export[col],
+                errors="coerce",
+            ).round(2)
+
+    detalle_export = detalle_export.where(pd.notna(detalle_export), "")
+
+    detalle_data = detalle_export.to_dict(orient="records")
 
     insights = []
 
@@ -1161,6 +1243,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         "valor_cliente_data": valor_cliente_data,
         "responsable_data": responsable_data,
         "aging_operaciones_data": aging_operaciones_data,
+        "detalle_columns": detalle_columns,
         "detalle_data": detalle_data,
         "insights": insights,
         "chart_labels_json": json.dumps(chart_labels, ensure_ascii=False),
@@ -1274,11 +1357,29 @@ def exportar_excel():
     filters = parse_filters_from_request()
     filtered_df = apply_filters(df, filters).copy()
 
-    export_cols = [
+    now_col = pd.Timestamp(datetime.utcnow() - timedelta(hours=5))
+
+    filtered_df["dias_espera_operaciones"] = pd.NA
+
+    mask_operaciones = (
+        (filtered_df["estado_cotizacion"] == "Enviada a Operaciones")
+        & (filtered_df["fecha_cierre_cotizacion_dt"].notna())
+    )
+
+    filtered_df.loc[mask_operaciones, "dias_espera_operaciones"] = (
+        (now_col - filtered_df.loc[mask_operaciones, "fecha_cierre_cotizacion_dt"]).dt.total_seconds()
+        / 86400
+    )
+
+    preferred_cols = [
         "fecha_ingreso_solicitud_dt",
         "fecha_respuesta_solicitud_dt",
         "fecha_ingreso_cotizacion_dt",
         "fecha_cierre_cotizacion_dt",
+        "periodo",
+        "anio",
+        "semana_num",
+        "semana_label",
         "canal",
         "cliente",
         "tipo_cliente",
@@ -1291,10 +1392,20 @@ def exportar_excel():
         "responsable_cotizacion",
         "accion_a_seguir",
         "valor_estimado_negocio",
+        "horas_respuesta_solicitud",
+        "dias_cierre_cotizacion",
+        "dias_espera_operaciones",
+        "tiene_respuesta_solicitud",
+        "tiene_cotizacion",
+        "cotizacion_cerrada",
+        "estado_cotizacion_valido",
         "observacion",
     ]
 
-    export_cols = [c for c in export_cols if c in filtered_df.columns]
+    export_cols = [col for col in preferred_cols if col in filtered_df.columns]
+    extra_cols = [col for col in filtered_df.columns if col not in export_cols]
+    export_cols = export_cols + extra_cols
+
     export_df = filtered_df[export_cols].copy()
 
     rename_export = {
@@ -1302,6 +1413,10 @@ def exportar_excel():
         "fecha_respuesta_solicitud_dt": "Fecha respuesta solicitud",
         "fecha_ingreso_cotizacion_dt": "Fecha ingreso cotización",
         "fecha_cierre_cotizacion_dt": "Fecha cierre cotización",
+        "periodo": "Periodo",
+        "anio": "Año",
+        "semana_num": "Semana año",
+        "semana_label": "Semana",
         "canal": "Canal",
         "cliente": "Cliente",
         "tipo_cliente": "Tipo de cliente",
@@ -1314,22 +1429,42 @@ def exportar_excel():
         "responsable_cotizacion": "Responsable cotización",
         "accion_a_seguir": "Acción a seguir",
         "valor_estimado_negocio": "Valor estimado negocio",
+        "horas_respuesta_solicitud": "Horas respuesta solicitud",
+        "dias_cierre_cotizacion": "Días respuesta cotización",
+        "dias_espera_operaciones": "Días en operaciones",
+        "tiene_respuesta_solicitud": "Tiene respuesta solicitud",
+        "tiene_cotizacion": "Tiene cotización",
+        "cotizacion_cerrada": "Cotización cerrada",
+        "estado_cotizacion_valido": "Estado cotización válido",
         "observacion": "Observación",
     }
+
+    for col in export_df.columns:
+        if pd.api.types.is_period_dtype(export_df[col]):
+            export_df[col] = export_df[col].astype(str)
+
+    for col in [
+        "horas_respuesta_solicitud",
+        "dias_cierre_cotizacion",
+        "dias_espera_operaciones",
+        "valor_estimado_negocio",
+    ]:
+        if col in export_df.columns:
+            export_df[col] = pd.to_numeric(export_df[col], errors="coerce").round(2)
 
     export_df = export_df.rename(columns=rename_export)
 
     output = BytesIO()
 
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        export_df.to_excel(writer, index=False, sheet_name="CRM Filtrado")
+        export_df.to_excel(writer, index=False, sheet_name="CRM Completo")
 
     output.seek(0)
 
     return send_file(
         output,
         as_attachment=True,
-        download_name="crm_filtrado.xlsx",
+        download_name="crm_completo_filtrado.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
