@@ -19,15 +19,19 @@ ESTADOS_COTIZACION_VALIDOS = {
     "Enviada al cliente",
     "Enviar a operaciones",
     "Perdida",
+    "Sin cobertura",
+    "No aplica",
 }
 
 
 def find_column(df: pd.DataFrame, possible_names: list[str]) -> str | None:
     normalized = {str(col).strip().lower(): col for col in df.columns}
+
     for name in possible_names:
         key = name.strip().lower()
         if key in normalized:
             return normalized[key]
+
     return None
 
 
@@ -52,10 +56,13 @@ def normalize_estado_cotizacion(series: pd.Series) -> pd.Series:
         "enviar a operaciones": "Enviar a operaciones",
         "perdida": "Perdida",
         "perdída": "Perdida",
+        "sin cobertura": "Sin cobertura",
+        "no aplica": "No aplica",
     }
 
     normalized = s.replace(replacements)
     normalized = normalized.where(normalized.isin(ESTADOS_COTIZACION_VALIDOS), "")
+
     return normalized
 
 
@@ -72,6 +79,7 @@ def to_numeric_safe(series: pd.Series) -> pd.Series:
             .str.replace(",", ".", regex=False)
         )
         return pd.to_numeric(cleaned, errors="coerce")
+
     return pd.to_numeric(series, errors="coerce")
 
 
@@ -83,6 +91,7 @@ def normalize_time_text(value: str) -> str:
     text = text.replace("a. m.", "AM").replace("p. m.", "PM")
     text = text.replace("a.m.", "AM").replace("p.m.", "PM")
     text = text.replace("am", "AM").replace("pm", "PM")
+
     return text.strip()
 
 
@@ -94,6 +103,7 @@ def combine_date_and_time(date_series: pd.Series, time_series: pd.Series) -> pd.
     result = pd.to_datetime(combined, errors="coerce")
 
     fallback = pd.to_datetime(date_series, errors="coerce", dayfirst=True)
+
     return result.fillna(fallback)
 
 
@@ -102,6 +112,7 @@ def month_label(period) -> str:
         return ""
 
     dt = period.to_timestamp()
+
     months = {
         1: "Enero",
         2: "Febrero",
@@ -116,6 +127,7 @@ def month_label(period) -> str:
         11: "Noviembre",
         12: "Diciembre",
     }
+
     return f"{months.get(dt.month, dt.month)} {dt.year}"
 
 
@@ -124,6 +136,7 @@ def month_short_label(period) -> str:
         return ""
 
     dt = period.to_timestamp()
+
     months = {
         1: "Ene",
         2: "Feb",
@@ -138,6 +151,7 @@ def month_short_label(period) -> str:
         11: "Nov",
         12: "Dic",
     }
+
     return months.get(dt.month, "")
 
 
@@ -168,6 +182,7 @@ def get_filter_options(df: pd.DataFrame) -> dict:
 
         vals = df[col].dropna().astype(str).str.strip()
         vals = vals[vals != ""]
+
         return sorted(vals.unique().tolist())
 
     options = {
@@ -203,10 +218,12 @@ def apply_filters(df: pd.DataFrame, filters: dict) -> pd.DataFrame:
 
     for filter_key, col_name in column_map.items():
         value = filters.get(filter_key, "").strip()
+
         if value and col_name in filtered.columns:
             filtered = filtered[filtered[col_name] == value]
 
     mes = filters.get("mes", "").strip()
+
     if mes and "periodo" in filtered.columns:
         filtered = filtered[filtered["periodo"].astype(str) == mes]
 
@@ -235,7 +252,12 @@ def load_data() -> pd.DataFrame:
             "Pon el archivo dentro de la carpeta del proyecto o ajusta DEFAULT_EXCEL_PATH."
         )
 
-    df = pd.read_excel(excel_path, sheet_name=SHEET_NAME, engine="openpyxl")
+    df = pd.read_excel(
+        excel_path,
+        sheet_name=SHEET_NAME,
+        engine="openpyxl",
+    )
+
     df.columns = [str(c).strip() for c in df.columns]
 
     col_canal = find_column(df, ["Canal", "CANAL", "Medio", "MEDIO"])
@@ -369,15 +391,24 @@ def load_data() -> pd.DataFrame:
     ).drop_duplicates().sort_values(["periodo", "semana_num"])
 
     month_df["orden_semana_mes"] = month_df.groupby("periodo").cumcount() + 1
-    df = df.merge(month_df, on=["periodo", "semana_num"], how="left")
+
+    df = df.merge(
+        month_df,
+        on=["periodo", "semana_num"],
+        how="left",
+    )
 
     df["horas_respuesta_solicitud"] = (
         (df["fecha_respuesta_solicitud_dt"] - df["fecha_ingreso_solicitud_dt"]).dt.total_seconds() / 3600
     )
 
+    df.loc[df["horas_respuesta_solicitud"] < 0, "horas_respuesta_solicitud"] = pd.NA
+
     df["dias_cierre_cotizacion"] = (
         (df["fecha_cierre_cotizacion_dt"] - df["fecha_ingreso_cotizacion_dt"]).dt.total_seconds() / 86400
     )
+
+    df.loc[df["dias_cierre_cotizacion"] < 0, "dias_cierre_cotizacion"] = pd.NA
 
     df["tiene_respuesta_solicitud"] = df["fecha_respuesta_solicitud_dt"].notna()
     df["tiene_cotizacion"] = df["fecha_ingreso_cotizacion_dt"].notna()
@@ -470,8 +501,7 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
 
     if not pendientes_operaciones_df.empty:
         pendientes_operaciones_df["dias_espera_operaciones"] = (
-            (now_col - pendientes_operaciones_df["fecha_cierre_cotizacion_dt"]).dt.total_seconds()
-            / 86400
+            (now_col - pendientes_operaciones_df["fecha_cierre_cotizacion_dt"]).dt.total_seconds() / 86400
         )
 
         pendientes_operaciones_df = pendientes_operaciones_df[
@@ -557,7 +587,9 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
 
     if not monthly.empty:
         monthly["mes"] = monthly["periodo"].apply(month_label)
-        monthly_data = monthly[["mes", "solicitudes", "cotizaciones", "valor"]].to_dict(orient="records")
+        monthly_data = monthly[
+            ["mes", "solicitudes", "cotizaciones", "valor"]
+        ].to_dict(orient="records")
     else:
         monthly_data = []
 
@@ -755,6 +787,50 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         ).round(1) if total_valor_operacion > 0 else 0
 
         tipo_operacion_data = tipo_operacion.to_dict(orient="records")
+
+    tipo_operacion_count_data = []
+
+    if "tipo_operacion" in df_unfiltered_for_trend.columns:
+        tipo_op_count = (
+            df_unfiltered_for_trend.groupby("tipo_operacion")
+            .size()
+            .reset_index(name="cantidad")
+            .sort_values("cantidad", ascending=False)
+        )
+
+        tipo_op_count = tipo_op_count[
+            (tipo_op_count["tipo_operacion"] != "")
+            & (tipo_op_count["cantidad"] > 0)
+        ]
+
+        tipo_operacion_count_data = tipo_op_count.to_dict(orient="records")
+
+    tipo_operacion_mensual = []
+
+    if "tipo_operacion" in df_unfiltered_for_trend.columns:
+        tipo_op_month = (
+            df_unfiltered_for_trend.groupby(["periodo", "tipo_operacion"])
+            .size()
+            .reset_index(name="cantidad")
+            .sort_values(["periodo", "cantidad"], ascending=[True, False])
+        )
+
+        tipo_op_month = tipo_op_month[
+            (tipo_op_month["tipo_operacion"] != "")
+            & (tipo_op_month["cantidad"] > 0)
+        ].copy()
+
+        tipo_op_month["mes"] = tipo_op_month["periodo"].apply(month_label)
+        tipo_op_month["periodo_texto"] = tipo_op_month["periodo"].astype(str)
+
+        tipo_operacion_mensual = tipo_op_month[
+            [
+                "periodo_texto",
+                "mes",
+                "tipo_operacion",
+                "cantidad",
+            ]
+        ].to_dict(orient="records")
 
     valor_cliente_data = []
 
@@ -980,13 +1056,13 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         )
 
     chart_labels = [row["mes"] for row in monthly_data]
-    chart_solicitudes = [row["solicitudes"] for row in monthly_data]
-    chart_cotizaciones = [row["cotizaciones"] for row in monthly_data]
+    chart_solicitudes = [int(row["solicitudes"]) for row in monthly_data]
+    chart_cotizaciones = [int(row["cotizaciones"]) for row in monthly_data]
 
     weekly_labels = [row["semana"] for row in weekly_data]
     weekly_months = [row["mes"] for row in weekly_data]
-    weekly_solicitudes = [row["solicitudes"] for row in weekly_data]
-    weekly_cotizaciones = [row["cotizaciones"] for row in weekly_data]
+    weekly_solicitudes = [int(row["solicitudes"]) for row in weekly_data]
+    weekly_cotizaciones = [int(row["cotizaciones"]) for row in weekly_data]
 
     chart_tipo_operacion_labels = [
         row["tipo_operacion"] for row in tipo_operacion_data
@@ -1000,17 +1076,17 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     chart_cliente_valores = [float(row["valor_total"]) for row in valor_cliente_data]
 
     chart_canal_labels = [row["canal"] for row in canal_data]
-    chart_canal_valores = [row["cantidad"] for row in canal_data]
+    chart_canal_valores = [int(row["cantidad"]) for row in canal_data]
 
     chart_tipo_cliente_labels = [row["tipo_cliente"] for row in tipo_cliente_data]
-    chart_tipo_cliente_valores = [row["cantidad"] for row in tipo_cliente_data]
+    chart_tipo_cliente_valores = [int(row["cantidad"]) for row in tipo_cliente_data]
 
     chart_estado_cot_labels = [
         row["estado_cotizacion"] for row in estado_cotizacion_data
     ]
 
     chart_estado_cot_valores = [
-        row["cantidad"] for row in estado_cotizacion_data
+        int(row["cantidad"]) for row in estado_cotizacion_data
     ]
 
     chart_aging_labels = [
@@ -1018,8 +1094,21 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
     ]
 
     chart_aging_valores = [
-        row["cantidad"] for row in aging_operaciones_data
+        int(row["cantidad"]) for row in aging_operaciones_data
     ]
+
+    chart_tipo_operacion_count_labels = [
+        row["tipo_operacion"] for row in tipo_operacion_count_data
+    ]
+
+    chart_tipo_operacion_count_valores = [
+        int(row["cantidad"]) for row in tipo_operacion_count_data
+    ]
+
+    chart_tipo_operacion_mensual_json = json.dumps(
+        tipo_operacion_mensual,
+        ensure_ascii=False,
+    )
 
     return {
         "generated_at": now_col.strftime("%Y-%m-%d %H:%M"),
@@ -1065,6 +1154,8 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
         "canal_data": canal_data,
         "tipo_cliente_data": tipo_cliente_data,
         "tipo_operacion_data": tipo_operacion_data,
+        "tipo_operacion_count_data": tipo_operacion_count_data,
+        "tipo_operacion_mensual": tipo_operacion_mensual,
         "estado_data": estado_data,
         "estado_cotizacion_data": estado_cotizacion_data,
         "valor_cliente_data": valor_cliente_data,
@@ -1115,6 +1206,14 @@ def build_dashboard_data(df_filtered: pd.DataFrame, df_unfiltered_for_trend: pd.
             ensure_ascii=False,
         ),
         "chart_aging_valores_json": json.dumps(chart_aging_valores),
+        "chart_tipo_operacion_count_labels_json": json.dumps(
+            chart_tipo_operacion_count_labels,
+            ensure_ascii=False,
+        ),
+        "chart_tipo_operacion_count_valores_json": json.dumps(
+            chart_tipo_operacion_count_valores
+        ),
+        "chart_tipo_operacion_mensual_json": chart_tipo_operacion_mensual_json,
     }
 
 

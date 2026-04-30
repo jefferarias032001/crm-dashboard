@@ -797,6 +797,85 @@ tfoot .total-row td {
     background: #dbeafe;
 }
 
+.operation-trend-wrap {
+    max-height: 360px;
+    overflow: auto;
+}
+
+.operation-trend-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+.operation-trend-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: linear-gradient(90deg, #0f3d73, #1b5ca6);
+    color: #ffffff;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.operation-trend-table td {
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.type-cell {
+    font-weight: 700;
+    color: #0f172a;
+    min-width: 180px;
+}
+
+.num-cell {
+    text-align: center;
+    font-weight: 700;
+    color: #334155;
+}
+
+.total-cell {
+    color: #0f172a;
+    background: #eff6ff !important;
+}
+
+.variation-cell {
+    text-align: center;
+    font-weight: 900;
+}
+
+.variation-cell.positive {
+    color: #16a34a;
+}
+
+.variation-cell.negative {
+    color: #ef4444;
+}
+
+.variation-cell.neutral {
+    color: #64748b;
+}
+
+.spark-cell {
+    min-width: 120px;
+    text-align: center;
+}
+
+.mini-sparkline {
+    width: 110px;
+    height: 28px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.empty-state {
+    padding: 18px;
+    color: #64748b;
+    font-weight: 700;
+    text-align: center;
+}
+
 .error-box {
     background: linear-gradient(135deg, #fff1f2, #ffe4e6);
     color: #9f1239;

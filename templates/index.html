@@ -16,7 +16,7 @@
         <div class="sidebar-top">
             <div class="brand">
                 <div class="brand-logo-wrap">
-                    <img src="{{ url_for('static', filename='logo.png') }}" class="brand-logo">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo empresa" class="brand-logo">
                 </div>
                 <div class="brand-copy">
                     <h2>Dashboard CRM</h2>
@@ -168,7 +168,7 @@
             </div>
 
             <div class="hero-logo-wrap">
-                <img src="{{ url_for('static', filename='logo.png') }}" class="hero-logo">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo empresa" class="hero-logo">
             </div>
         </header>
 
@@ -391,6 +391,35 @@
                 </div>
                 <div class="chart-box chart-box-md">
                     <canvas id="clientValueChart"></canvas>
+                </div>
+            </section>
+        </section>
+
+        <section class="grid-2 section-gap">
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Operación</span>
+                        <h2>Tipo de operación por cantidad</h2>
+                    </div>
+                    <span class="pill">Cantidad total</span>
+                </div>
+                <div class="chart-box chart-box-md">
+                    <canvas id="tipoOperacionCantidadChart"></canvas>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Operación</span>
+                        <h2>Tendencia mensual por tipo de operación</h2>
+                    </div>
+                    <span class="pill">Matriz</span>
+                </div>
+
+                <div class="table-wrap operation-trend-wrap">
+                    <div id="tipoOperacionMensualTable"></div>
                 </div>
             </section>
         </section>
@@ -796,6 +825,10 @@ const estadoCotValues = {{ data.chart_estado_cot_valores_json | safe }};
 const agingLabels = {{ data.chart_aging_labels_json | safe }};
 const agingValues = {{ data.chart_aging_valores_json | safe }};
 
+const tipoOperacionCantidadLabels = {{ data.chart_tipo_operacion_count_labels_json | safe }};
+const tipoOperacionCantidadValues = {{ data.chart_tipo_operacion_count_valores_json | safe }};
+const tipoOperacionMensualRaw = {{ data.chart_tipo_operacion_mensual_json | safe }};
+
 const shortMoney = (value) => {
     const v = Number(value || 0);
     if (v >= 1000000000) return '$' + (v / 1000000000).toFixed(2) + 'B';
@@ -817,6 +850,19 @@ const labelStyle = {
         size: 10
     }
 };
+
+const chartColors = [
+    '#2563eb',
+    '#f59e0b',
+    '#0f766e',
+    '#7c3aed',
+    '#ef4444',
+    '#0891b2',
+    '#16a34a',
+    '#d946ef',
+    '#334155',
+    '#fb923c'
+];
 
 new Chart(document.getElementById('monthlyTrendChart'), {
     type: 'line',
@@ -1134,6 +1180,219 @@ new Chart(document.getElementById('clientValueChart'), {
     }
 });
 
+new Chart(document.getElementById('tipoOperacionCantidadChart'), {
+    type: 'bar',
+    data: {
+        labels: tipoOperacionCantidadLabels,
+        datasets: [
+            {
+                label: 'Cantidad',
+                data: tipoOperacionCantidadValues,
+                backgroundColor: chartColors,
+                borderRadius: 10,
+                maxBarThickness: 52
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            },
+            datalabels: {
+                ...labelStyle,
+                anchor: 'end',
+                align: 'end',
+                formatter: v => v > 0 ? v : ''
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: '#64748b',
+                    precision: 0
+                },
+                grid: {
+                    color: 'rgba(148,163,184,0.16)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#64748b'
+                },
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+function buildSparkline(values) {
+    const width = 110;
+    const height = 28;
+    const padding = 5;
+
+    if (!values || values.length === 0) {
+        return `<svg class="mini-sparkline" viewBox="0 0 ${width} ${height}"></svg>`;
+    }
+
+    const max = Math.max(...values, 1);
+    const min = Math.min(...values, 0);
+    const range = Math.max(max - min, 1);
+
+    const pointObjects = values.map((value, index) => {
+        const x = values.length === 1
+            ? width / 2
+            : padding + (index * (width - padding * 2)) / (values.length - 1);
+
+        const y = height - padding - ((value - min) / range) * (height - padding * 2);
+
+        return {
+            x,
+            y,
+            value
+        };
+    });
+
+    const points = pointObjects
+        .map(point => `${point.x},${point.y}`)
+        .join(" ");
+
+    const lastValue = values[values.length - 1];
+    const previousValue = values.length > 1 ? values[values.length - 2] : values[0];
+
+    const color = lastValue >= previousValue ? "#16a34a" : "#ef4444";
+
+    const markers = pointObjects.map((point, index) => {
+        const isLast = index === pointObjects.length - 1;
+        const radius = isLast ? 3.4 : 2.5;
+
+        return `
+            <circle
+                cx="${point.x}"
+                cy="${point.y}"
+                r="${radius}"
+                fill="#ffffff"
+                stroke="${color}"
+                stroke-width="2"
+            >
+                <title>${point.value}</title>
+            </circle>
+        `;
+    }).join("");
+
+    return `
+        <svg class="mini-sparkline" viewBox="0 0 ${width} ${height}">
+            <polyline
+                points="${points}"
+                fill="none"
+                stroke="${color}"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+            ${markers}
+        </svg>
+    `;
+}
+
+function renderTipoOperacionMensualTable() {
+    const container = document.getElementById("tipoOperacionMensualTable");
+
+    if (!container || !tipoOperacionMensualRaw || tipoOperacionMensualRaw.length === 0) {
+        if (container) {
+            container.innerHTML = `<div class="empty-state">No hay información mensual por tipo de operación.</div>`;
+        }
+        return;
+    }
+
+    const mesesOrdenados = [...new Map(
+        tipoOperacionMensualRaw.map(item => [item.periodo_texto, item.mes])
+    ).entries()].sort((a, b) => a[0].localeCompare(b[0]));
+
+    const meses = mesesOrdenados.map(item => ({
+        periodo: item[0],
+        label: item[1]
+    }));
+
+    const tipos = [...new Set(tipoOperacionMensualRaw.map(item => item.tipo_operacion))];
+
+    const rows = tipos.map(tipo => {
+        const valores = meses.map(mes => {
+            const row = tipoOperacionMensualRaw.find(
+                item => item.periodo_texto === mes.periodo && item.tipo_operacion === tipo
+            );
+
+            return row ? Number(row.cantidad) : 0;
+        });
+
+        const total = valores.reduce((acc, val) => acc + val, 0);
+
+const ultimo = valores[valores.length - 1] || 0;
+const anterior = valores.length > 1 ? valores[valores.length - 2] || 0 : 0;
+
+const variacion = ultimo - anterior;
+
+return {
+    tipo,
+    valores,
+    total,
+    variacion
+};
+    }).sort((a, b) => b.total - a.total);
+
+    const headerMeses = meses.map(mes => `<th>${mes.label}</th>`).join("");
+
+    const bodyRows = rows.map(row => {
+        const monthCells = row.valores.map(value => {
+            return `<td class="num-cell">${value > 0 ? value : ""}</td>`;
+        }).join("");
+
+        const variacionClass = row.variacion > 0
+            ? "positive"
+            : row.variacion < 0
+                ? "negative"
+                : "neutral";
+
+        const variacionText = row.variacion > 0
+            ? `+${row.variacion}`
+            : `${row.variacion}`;
+
+        return `
+            <tr>
+                <td class="type-cell">${row.tipo}</td>
+                <td class="num-cell total-cell">${row.total}</td>
+                ${monthCells}
+                <td class="variation-cell ${variacionClass}">${variacionText}</td>
+                <td class="spark-cell">${buildSparkline(row.valores)}</td>
+            </tr>
+        `;
+    }).join("");
+
+    container.innerHTML = `
+        <table class="operation-trend-table">
+            <thead>
+                <tr>
+                    <th>Tipo de operación</th>
+                    <th>Total</th>
+                    ${headerMeses}
+                    <th>Var.</th>
+                    <th>Tendencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${bodyRows}
+            </tbody>
+        </table>
+    `;
+}
+
+renderTipoOperacionMensualTable();
+
 new Chart(document.getElementById('channelChart'), {
     type: 'bar',
     data: {
@@ -1187,6 +1446,8 @@ new Chart(document.getElementById('channelChart'), {
 
 const estadoColorMap = {
     "Perdida": "#ef4444",
+    "Sin cobertura": "#dc2626",
+    "No aplica": "#64748b",
     "Aprobada": "#16a34a",
     "Enviada a Operaciones": "#2563eb",
     "Enviada al cliente": "#f59e0b",
