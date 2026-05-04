@@ -395,8 +395,8 @@
             </section>
         </section>
 
-        <section class="grid-2 section-gap">
-            <section class="panel">
+        <section class="section-gap">
+            <section class="panel panel-full">
                 <div class="panel-head">
                     <div>
                         <span class="panel-eyebrow">Operación</span>
@@ -404,12 +404,14 @@
                     </div>
                     <span class="pill">Cantidad total</span>
                 </div>
-                <div class="chart-box chart-box-md">
+                <div class="chart-box chart-box-xl">
                     <canvas id="tipoOperacionCantidadChart"></canvas>
                 </div>
             </section>
+        </section>
 
-            <section class="panel">
+        <section class="section-gap">
+            <section class="panel panel-full">
                 <div class="panel-head">
                     <div>
                         <span class="panel-eyebrow">Operación</span>
@@ -418,7 +420,7 @@
                     <span class="pill">Matriz</span>
                 </div>
 
-                <div class="table-wrap operation-trend-wrap">
+                <div class="table-wrap operation-trend-wrap operation-trend-wide">
                     <div id="tipoOperacionMensualTable"></div>
                 </div>
             </section>
@@ -441,21 +443,6 @@
             <section class="panel">
                 <div class="panel-head">
                     <div>
-                        <span class="panel-eyebrow">Operaciones</span>
-                        <h2>Aging pendientes en operaciones</h2>
-                    </div>
-                    <span class="pill">Aging</span>
-                </div>
-                <div class="chart-box chart-box-md">
-                    <canvas id="agingOperacionesChart"></canvas>
-                </div>
-            </section>
-        </section>
-
-        <section class="grid-2 section-gap">
-            <section class="panel">
-                <div class="panel-head">
-                    <div>
                         <span class="panel-eyebrow">Origen</span>
                         <h2>Solicitudes por canal</h2>
                     </div>
@@ -465,7 +452,9 @@
                     <canvas id="channelChart"></canvas>
                 </div>
             </section>
+        </section>
 
+        <section class="grid-2 section-gap">
             <section class="panel">
                 <div class="panel-head">
                     <div>
@@ -478,22 +467,22 @@
                     <canvas id="clientTypeChart"></canvas>
                 </div>
             </section>
-        </section>
 
-        <section class="panel panel-insight section-gap">
-            <div class="panel-head">
-                <div>
-                    <span class="panel-eyebrow">Insights</span>
-                    <h2>Titulares ejecutivos</h2>
+            <section class="panel panel-insight">
+                <div class="panel-head">
+                    <div>
+                        <span class="panel-eyebrow">Insights</span>
+                        <h2>Titulares ejecutivos</h2>
+                    </div>
+                    <span class="pill">Resumen</span>
                 </div>
-                <span class="pill">Resumen</span>
-            </div>
 
-            <ul class="insight-list">
-                {% for item in data.insights %}
-                <li>{{ item }}</li>
-                {% endfor %}
-            </ul>
+                <ul class="insight-list">
+                    {% for item in data.insights %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </section>
         </section>
 
         <section class="grid-2 section-gap table-section">
@@ -799,9 +788,6 @@ const clientTypeValues = {{ data.chart_tipo_cliente_valores_json | safe }};
 const estadoCotLabels = {{ data.chart_estado_cot_labels_json | safe }};
 const estadoCotValues = {{ data.chart_estado_cot_valores_json | safe }};
 
-const agingLabels = {{ data.chart_aging_labels_json | safe }};
-const agingValues = {{ data.chart_aging_valores_json | safe }};
-
 const tipoOperacionCantidadLabels = {{ data.chart_tipo_operacion_count_labels_json | safe }};
 const tipoOperacionCantidadValues = {{ data.chart_tipo_operacion_count_valores_json | safe }};
 const tipoOperacionMensualRaw = {{ data.chart_tipo_operacion_mensual_json | safe }};
@@ -838,7 +824,15 @@ const chartColors = [
     '#16a34a',
     '#d946ef',
     '#334155',
-    '#fb923c'
+    '#fb923c',
+    '#22c55e',
+    '#eab308',
+    '#06b6d4',
+    '#a855f7',
+    '#f97316',
+    '#64748b',
+    '#84cc16',
+    '#ec4899'
 ];
 
 new Chart(document.getElementById('monthlyTrendChart'), {
@@ -1197,7 +1191,7 @@ new Chart(document.getElementById('tipoOperacionCantidadChart'), {
                 data: tipoOperacionCantidadValues,
                 backgroundColor: chartColors,
                 borderRadius: 10,
-                maxBarThickness: 52
+                maxBarThickness: 54
             }
         ]
     },
@@ -1206,10 +1200,10 @@ new Chart(document.getElementById('tipoOperacionCantidadChart'), {
         maintainAspectRatio: false,
         layout: {
             padding: {
-                top: 30,
-                right: 14,
-                bottom: 6,
-                left: 6
+                top: 34,
+                right: 18,
+                bottom: 20,
+                left: 8
             }
         },
         plugins: {
@@ -1229,7 +1223,7 @@ new Chart(document.getElementById('tipoOperacionCantidadChart'), {
         scales: {
             y: {
                 beginAtZero: true,
-                suggestedMax: Math.ceil(tipoOperacionCantidadMax * 1.18),
+                suggestedMax: Math.ceil(tipoOperacionCantidadMax * 1.20),
                 ticks: {
                     color: '#64748b',
                     precision: 0
@@ -1241,8 +1235,12 @@ new Chart(document.getElementById('tipoOperacionCantidadChart'), {
             x: {
                 ticks: {
                     color: '#64748b',
-                    maxRotation: 40,
-                    minRotation: 40
+                    maxRotation: 32,
+                    minRotation: 32,
+                    autoSkip: false,
+                    font: {
+                        size: 10
+                    }
                 },
                 grid: {
                     display: false
@@ -1516,74 +1514,6 @@ new Chart(document.getElementById('estadoCotizacionChart'), {
             datalabels: {
                 ...labelStyle,
                 formatter: v => v > 0 ? v : ''
-            }
-        }
-    }
-});
-
-new Chart(document.getElementById('agingOperacionesChart'), {
-    type: 'bar',
-    data: {
-        labels: agingLabels,
-        datasets: [
-            {
-                label: 'Pendientes',
-                data: agingValues,
-                backgroundColor: agingLabels.map(label => {
-                    if (label === '0-1 días') return '#16a34a';
-                    if (label === '1-2 días') return '#f59e0b';
-                    if (label === '2-3 días') return '#fb923c';
-                    return '#ef4444';
-                }),
-                borderRadius: 10,
-                maxBarThickness: 58
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: {
-            padding: {
-                top: 20,
-                right: 14,
-                bottom: 6,
-                left: 6
-            }
-        },
-        plugins: {
-            legend: {
-                display: false
-            },
-            datalabels: {
-                ...labelStyle,
-                anchor: 'end',
-                align: 'end',
-                offset: 6,
-                clip: false,
-                clamp: true,
-                formatter: v => v > 0 ? v : ''
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                suggestedMax: Math.max(...agingValues, 0) * 1.15,
-                ticks: {
-                    color: '#64748b',
-                    precision: 0
-                },
-                grid: {
-                    color: 'rgba(148,163,184,0.16)'
-                }
-            },
-            x: {
-                ticks: {
-                    color: '#64748b'
-                },
-                grid: {
-                    display: false
-                }
             }
         }
     }

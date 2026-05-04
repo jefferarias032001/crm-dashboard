@@ -514,6 +514,10 @@ body.theme-B .hero-logo-wrap {
     min-width: 0;
 }
 
+.panel-full {
+    width: 100%;
+}
+
 body.theme-A .panel {
     background: linear-gradient(180deg, #ffffff, #fbfdff);
     border: 1px solid #e5edf8;
@@ -723,6 +727,10 @@ body.theme-B .panel-accent-gold {
     height: 280px;
 }
 
+.chart-box-xl {
+    height: 430px;
+}
+
 .insight-list {
     list-style: none;
     padding-left: 0;
@@ -798,8 +806,12 @@ tfoot .total-row td {
 }
 
 .operation-trend-wrap {
-    max-height: 360px;
+    max-height: 420px;
     overflow: auto;
+}
+
+.operation-trend-wide {
+    min-height: 380px;
 }
 
 .operation-trend-table {
@@ -826,7 +838,7 @@ tfoot .total-row td {
 .type-cell {
     font-weight: 700;
     color: #0f172a;
-    min-width: 180px;
+    min-width: 220px;
 }
 
 .num-cell {
@@ -858,7 +870,7 @@ tfoot .total-row td {
 }
 
 .spark-cell {
-    min-width: 120px;
+    min-width: 130px;
     text-align: center;
 }
 
@@ -930,6 +942,10 @@ tfoot .total-row td {
     .panel-compact .trend-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .chart-box-xl {
+        height: 390px;
+    }
 }
 
 @media (max-width: 1250px) {
@@ -975,8 +991,9 @@ tfoot .total-row td {
     }
 
     .chart-box-lg,
-    .chart-box-md {
-        height: 260px;
+    .chart-box-md,
+    .chart-box-xl {
+        height: 280px;
     }
 }
 
